@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check, Users, Bot, Bell, Sparkles } from 'lucide-react';
+import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check, Users, Bot, Bell, Sparkles, Flame } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,7 @@ import McpServersContent from './settings/McpServersContent';
 import LanguageSelector from './LanguageSelector';
 import LoadingFallback from './LoadingFallback';
 import SkillsShowcase from './SkillsShowcase.jsx';
+import AIEvents from './AIEvents.jsx';
 const UserManagement = React.lazy(() => import('./settings/UserManagement'));
 const AIProvidersContent = React.lazy(() => import('./settings/AIProvidersContent'));
 const NotificationContent = React.lazy(() => import('./settings/NotificationContent'));
@@ -1059,6 +1060,17 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
                 <Sparkles className="w-4 h-4 inline mr-2" />
                 {t('mainTabs.skills', 'Skills')}
               </button>
+              <button
+                onClick={() => setActiveTab('ai-events')}
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'ai-events'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Flame className="w-4 h-4 inline mr-2" />
+                {t('mainTabs.aiEvents', 'AI Events')}
+              </button>
               {isAdmin && (
                 <button
                   onClick={() => setActiveTab('users')}
@@ -1980,6 +1992,13 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {activeTab === 'skills' && (
               <div className="space-y-6 md:space-y-8">
                 <SkillsShowcase />
+              </div>
+            )}
+
+            {/* AI Events Tab */}
+            {activeTab === 'ai-events' && (
+              <div className="space-y-6 md:space-y-8">
+                <AIEvents />
               </div>
             )}
 

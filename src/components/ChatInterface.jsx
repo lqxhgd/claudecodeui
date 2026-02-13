@@ -5019,16 +5019,37 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         ) : chatMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             {!selectedSession && !currentSessionId && (
-              <div className="text-center px-6 sm:px-4 py-12">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-center px-6 sm:px-4 py-8">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('providerSelection.title')}</h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                  {t('providerSelection.title')}
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-sm mx-auto">
                   {t('providerSelection.description')}
                 </p>
+                {/* Quick prompt suggestions */}
+                <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
+                  {[
+                    { icon: '🔍', text: 'Review my code' },
+                    { icon: '🐛', text: 'Fix this bug' },
+                    { icon: '📝', text: 'Write tests' },
+                    { icon: '💡', text: 'Explain this file' },
+                  ].map(({ icon, text }) => (
+                    <button
+                      key={text}
+                      type="button"
+                      onClick={() => { setInput(text); if (textareaRef.current) textareaRef.current.focus(); }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-200"
+                    >
+                      <span>{icon}</span>
+                      <span>{text}</span>
+                    </button>
+                  ))}
+                </div>
                 {provider && tasksEnabled && isTaskMasterInstalled && (
                   <div className="mt-6 px-4 sm:px-0">
                     <NextTaskBanner
@@ -5237,7 +5258,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                       <button
                         type="button"
                         onClick={() => handlePermissionDecision(request.requestId, { allow: true })}
-                        className="inline-flex items-center gap-2 rounded-md bg-amber-600 text-white text-xs font-medium px-3 py-1.5 hover:bg-amber-700 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-md bg-amber-600 text-white text-sm font-medium px-4 py-2.5 min-h-[44px] hover:bg-amber-700 transition-colors"
                       >
                         Allow once
                       </button>
@@ -5249,7 +5270,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                           }
                           handlePermissionDecision(matchingRequestIds, { allow: true, rememberEntry: permissionEntry });
                         }}
-                        className={`inline-flex items-center gap-2 rounded-md text-xs font-medium px-3 py-1.5 border transition-colors ${
+                        className={`inline-flex items-center gap-2 rounded-md text-sm font-medium px-4 py-2.5 min-h-[44px] border transition-colors ${
                           permissionEntry
                             ? 'border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-100 dark:hover:bg-amber-900/30'
                             : 'border-gray-300 text-gray-400 cursor-not-allowed'
@@ -5261,7 +5282,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                       <button
                         type="button"
                         onClick={() => handlePermissionDecision(request.requestId, { allow: false, message: 'User denied tool use' })}
-                        className="inline-flex items-center gap-2 rounded-md text-xs font-medium px-3 py-1.5 border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-900/30 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-md text-sm font-medium px-4 py-2.5 min-h-[44px] border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-900/30 transition-colors"
                       >
                         Deny
                       </button>

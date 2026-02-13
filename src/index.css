@@ -98,7 +98,6 @@
   * {
     @apply border-border;
     box-sizing: border-box;
-    transition: none;
   }
   
   body {
