@@ -549,12 +549,12 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
   return (
     <div
       ref={messageRef}
-      className={`chat-message ${message.type} ${isGrouped ? 'grouped' : ''} ${message.type === 'user' ? 'flex justify-end px-3 sm:px-0' : 'px-3 sm:px-0'}`}
+      className={`chat-message message-enter ${message.type} ${isGrouped ? 'grouped' : ''} ${message.type === 'user' ? 'flex justify-end px-3 sm:px-0' : 'px-3 sm:px-0'}`}
     >
       {message.type === 'user' ? (
         /* User message bubble on the right */
         <div className="flex items-end space-x-0 sm:space-x-3 w-full sm:w-auto sm:max-w-[85%] md:max-w-md lg:max-w-lg xl:max-w-xl">
-          <div className="bg-blue-600 text-white rounded-2xl rounded-br-md px-3 sm:px-4 py-2 shadow-sm flex-1 sm:flex-initial">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-md px-3 sm:px-4 py-2 shadow-sm flex-1 sm:flex-initial">
             <div className="text-sm whitespace-pre-wrap break-words">
               {message.content}
             </div>
@@ -1751,7 +1751,20 @@ const MessageComponent = memo(({ message, index, prevMessage, createDiff, onFile
                 </details>
               </div>
             ) : (
-              <div className="text-sm text-gray-700 dark:text-gray-300">
+              <div className={`text-sm message-enter ${
+                message.type === 'error'
+                  ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 text-red-800 dark:text-red-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm'
+              }`}>
+                {/* Error icon for error messages */}
+                {message.type === 'error' && (
+                  <div className="flex items-center gap-2 mb-2 text-red-600 dark:text-red-400 font-medium text-xs">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{t('messageTypes.error')}</span>
+                  </div>
+                )}
                 {/* Thinking accordion for reasoning */}
                 {showThinking && message.reasoning && (
                   <details className="mb-3">
@@ -5139,7 +5152,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
 
 
       {/* Input Area - Fixed Bottom */}
-      <div className={`p-2 sm:p-4 md:p-4 flex-shrink-0 ${
+      <div className={`p-2 sm:p-4 md:p-4 flex-shrink-0 border-t border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm ${
         isInputFocused ? 'pb-2 sm:pb-4 md:pb-6' : 'pb-2 sm:pb-4 md:pb-6'
       }`}>
     
@@ -5639,7 +5652,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 e.preventDefault();
                 handleSubmit(e);
               }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 sm:w-12 sm:h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 hover:scale-105 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100 rounded-full flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800 shadow-md hover:shadow-lg disabled:shadow-none"
             >
               <svg 
                 className="w-4 h-4 sm:w-5 sm:h-5 text-white transform rotate-90" 

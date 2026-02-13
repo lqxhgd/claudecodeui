@@ -616,11 +616,11 @@ function Sidebar({
       )}
 
       <div
-        className="h-full flex flex-col bg-card md:select-none"
+        className="h-full flex flex-col bg-card dark:bg-gray-900 md:select-none transition-all duration-300 ease-in-out shadow-[2px_0_8px_rgba(0,0,0,0.05)] dark:shadow-[2px_0_8px_rgba(0,0,0,0.2)]"
         style={isPWA && isMobile ? { paddingTop: '44px' } : {}}
       >
       {/* Header */}
-      <div className="md:p-4 md:border-b md:border-border">
+      <div className="md:p-4 md:border-b md:border-border/70 md:shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:md:shadow-[0_1px_3px_rgba(0,0,0,0.15)]">
         {/* Desktop Header */}
         <div className="hidden md:flex items-center justify-between">
           {IS_PLATFORM ? (
@@ -629,22 +629,22 @@ function Sidebar({
               className="flex items-center gap-3 hover:opacity-80 transition-opacity group"
               title={t('tooltips.viewEnvironments')}
             >
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                <MessageSquare className="w-4 h-4 text-primary-foreground" />
+              <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+                <MessageSquare className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-foreground">{t('app.title')}</h1>
-                <p className="text-sm text-muted-foreground">{t('app.subtitle')}</p>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">{t('app.title')}</h1>
+                <p className="text-xs text-muted-foreground">{t('app.subtitle')}</p>
               </div>
             </a>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-sm">
-                <MessageSquare className="w-4 h-4 text-primary-foreground" />
+              <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center shadow-sm">
+                <MessageSquare className="w-5 h-5 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-foreground">{t('app.title')}</h1>
-                <p className="text-sm text-muted-foreground">{t('app.subtitle')}</p>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">{t('app.title')}</h1>
+                <p className="text-xs text-muted-foreground">{t('app.subtitle')}</p>
               </div>
             </div>
           )}
@@ -785,7 +785,7 @@ function Sidebar({
       )}
       
       {/* Projects List */}
-      <ScrollArea className="flex-1 md:px-2 md:py-3 overflow-y-auto overscroll-contain">
+      <ScrollArea className="flex-1 md:px-2 md:py-3 overflow-y-auto overscroll-contain sidebar-scroll">
         <div className="md:space-y-1 pb-safe-area-inset-bottom">
           {isLoading ? (
             <div className="text-center py-12 md:py-8 px-4">
@@ -856,7 +856,7 @@ function Sidebar({
                       <div
                         className={cn(
                           "p-3 mx-3 my-1 rounded-lg bg-card border border-border/50 active:scale-[0.98] transition-all duration-150",
-                          isSelected && "bg-primary/5 border-primary/20",
+                          isSelected && "bg-primary/5 border-primary/20 border-l-3 border-l-blue-500",
                           isStarred && !isSelected && "bg-yellow-50/50 dark:bg-yellow-900/5 border-yellow-200/30 dark:border-yellow-800/30"
                         )}
                         onClick={() => {
@@ -1015,8 +1015,8 @@ function Sidebar({
                     <Button
                       variant="ghost"
                       className={cn(
-                        "hidden md:flex w-full justify-between p-2 h-auto font-normal hover:bg-accent/50",
-                        isSelected && "bg-accent text-accent-foreground",
+                        "hidden md:flex w-full justify-between p-2 h-auto font-normal rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150",
+                        isSelected && "bg-accent text-accent-foreground border-l-3 border-l-blue-500",
                         isStarred && !isSelected && "bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/20"
                       )}
                       onClick={() => {
@@ -1219,8 +1219,8 @@ function Sidebar({
                             <div className="md:hidden">
                               <div
                                 className={cn(
-                                  "p-2 mx-3 my-0.5 rounded-md bg-card border active:scale-[0.98] transition-all duration-150 relative",
-                                  selectedSession?.id === session.id ? "bg-primary/5 border-primary/20" :
+                                  "p-2 mx-3 my-0.5 rounded-lg bg-card border active:scale-[0.98] transition-all duration-150 relative",
+                                  selectedSession?.id === session.id ? "bg-primary/5 border-primary/20 border-l-3 border-l-blue-500" :
                                   isActive ? "border-green-500/30 bg-green-50/5 dark:bg-green-900/5" : "border-border/30"
                                 )}
                                 onClick={() => {
@@ -1292,8 +1292,8 @@ function Sidebar({
                               <Button
                                 variant="ghost"
                                 className={cn(
-                                  "w-full justify-start p-2 h-auto font-normal text-left hover:bg-accent/50 transition-colors duration-200",
-                                  selectedSession?.id === session.id && "bg-accent text-accent-foreground"
+                                  "w-full justify-start p-2 h-auto font-normal text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150",
+                                  selectedSession?.id === session.id && "bg-accent text-accent-foreground border-l-3 border-l-blue-500"
                                 )}
                                 onClick={() => handleSessionClick(session, project.name)}
                                 onTouchEnd={handleTouchClick(() => handleSessionClick(session, project.name))}

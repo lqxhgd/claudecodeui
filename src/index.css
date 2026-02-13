@@ -872,7 +872,7 @@
   }
 }
 
-/* Message enter animation */
+/* Message animation */
 @keyframes messageSlideIn {
   from {
     opacity: 0;
@@ -885,8 +885,18 @@
 }
 
 .message-enter {
-  animation: messageSlideIn 0.2s ease-out;
+  animation: messageSlideIn 0.3s ease-out;
 }
+
+/* Typing indicator */
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+
+.typing-dot:nth-child(1) { animation: typingDot 1.4s ease-in-out infinite; }
+.typing-dot:nth-child(2) { animation: typingDot 1.4s ease-in-out 0.2s infinite; }
+.typing-dot:nth-child(3) { animation: typingDot 1.4s ease-in-out 0.4s infinite; }
 
 /* Fade in animation for lazy loaded components */
 @keyframes fadeIn {
@@ -896,4 +906,48 @@
 
 .fade-in {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .sidebar-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+    backdrop-filter: blur(4px);
+  }
+
+  .sidebar-mobile {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .sidebar-mobile.open {
+    transform: translateX(0);
+  }
+}
+
+/* Smooth scrollbar for sidebar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
 }
