@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check, Users, Bot, Bell } from 'lucide-react';
+import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check, Users, Bot, Bell, Sparkles } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -22,6 +22,7 @@ import PermissionsContent from './settings/PermissionsContent';
 import McpServersContent from './settings/McpServersContent';
 import LanguageSelector from './LanguageSelector';
 import LoadingFallback from './LoadingFallback';
+import SkillsShowcase from './SkillsShowcase.jsx';
 const UserManagement = React.lazy(() => import('./settings/UserManagement'));
 const AIProvidersContent = React.lazy(() => import('./settings/AIProvidersContent'));
 const NotificationContent = React.lazy(() => import('./settings/NotificationContent'));
@@ -971,11 +972,11 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
 
         <div className="flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="border-b border-border">
-            <div className="flex px-4 md:px-6">
+          <div className="border-b border-border overflow-x-auto scrollbar-hide">
+            <div className="flex flex-nowrap whitespace-nowrap px-4 md:px-6">
               <button
                 onClick={() => setActiveTab('agents')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'agents'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -985,7 +986,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('appearance')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'appearance'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -995,7 +996,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('git')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'git'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1006,7 +1007,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('api')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'api'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1017,7 +1018,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('tasks')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'tasks'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1027,7 +1028,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('ai-providers')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'ai-providers'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1038,7 +1039,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               </button>
               <button
                 onClick={() => setActiveTab('notifications')}
-                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'notifications'
                     ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1047,10 +1048,21 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
                 <Bell className="w-4 h-4 inline mr-2" />
                 {t('mainTabs.notifications', 'Notifications')}
               </button>
+              <button
+                onClick={() => setActiveTab('skills')}
+                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'skills'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 inline mr-2" />
+                {t('mainTabs.skills', 'Skills')}
+              </button>
               {isAdmin && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'users'
                       ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -1961,6 +1973,13 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
                 <React.Suspense fallback={<LoadingFallback />}>
                   <NotificationContent />
                 </React.Suspense>
+              </div>
+            )}
+
+            {/* Skills Tab */}
+            {activeTab === 'skills' && (
+              <div className="space-y-6 md:space-y-8">
+                <SkillsShowcase />
               </div>
             )}
 

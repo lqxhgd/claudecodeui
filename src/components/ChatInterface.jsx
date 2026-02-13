@@ -5136,11 +5136,10 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 {/* Abort button removed - functionality not yet implemented at backend */}
               </div>
               <div className="w-full text-sm text-gray-500 dark:text-gray-400 pl-3 sm:pl-0">
-                <div className="flex items-center space-x-1">
-                  <div className="animate-pulse">●</div>
-                  <div className="animate-pulse" style={{ animationDelay: '0.2s' }}>●</div>
-                  <div className="animate-pulse" style={{ animationDelay: '0.4s' }}>●</div>
-                  <span className="ml-2">Thinking...</span>
+                <div className="flex items-center gap-1.5 px-3 py-2">
+                  <span className="typing-dot w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  <span className="typing-dot w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                  <span className="typing-dot w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500"></span>
                 </div>
               </div>
             </div>
@@ -5148,13 +5147,24 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         )}
         
         <div ref={messagesEndRef} />
+
+        {/* Scroll to bottom button - floating inside messages container */}
+        {isUserScrolledUp && chatMessages.length > 0 && (
+          <button
+            onClick={scrollToBottom}
+            className="absolute bottom-4 right-4 w-10 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800 z-10"
+            title="Scroll to bottom"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </button>
+        )}
       </div>
 
 
       {/* Input Area - Fixed Bottom */}
-      <div className={`p-2 sm:p-4 md:p-4 flex-shrink-0 border-t border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm ${
-        isInputFocused ? 'pb-2 sm:pb-4 md:pb-6' : 'pb-2 sm:pb-4 md:pb-6'
-      }`}>
+      <div className="p-2 sm:p-4 md:p-4 pb-2 sm:pb-4 md:pb-6 flex-shrink-0 border-t border-gray-200/60 dark:border-gray-700/60 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
     
         <div className="flex-1">
               <ClaudeStatus
@@ -5262,185 +5272,149 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-            {/* Provider Switcher */}
-            <select
-              value={provider}
-              onChange={(e) => {
-                const newProvider = e.target.value;
-                setProvider(newProvider);
-                localStorage.setItem('selected-provider', newProvider);
-              }}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
-            >
-              <option value="claude">Claude</option>
-              <option value="cursor">Cursor</option>
-              <option value="codex">Codex</option>
-              <option value="kimi">Kimi</option>
-              <option value="qwen">Qwen</option>
-              <option value="deepseek">DeepSeek</option>
-              <option value="glm">GLM</option>
-              <option value="doubao">Doubao</option>
-              <option value="wenxin">Wenxin</option>
-            </select>
-            {/* Model sub-selector */}
-            {provider === 'claude' && (
+          <div className="flex items-center justify-between gap-2 sm:gap-3 flex-nowrap overflow-x-auto scrollbar-hide">
+            {/* Left group: Provider + Model selectors */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* Provider Switcher */}
               <select
-                value={claudeModel}
-                onChange={(e) => { setClaudeModel(e.target.value); localStorage.setItem('claude-model', e.target.value); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+                value={provider}
+                onChange={(e) => {
+                  const newProvider = e.target.value;
+                  setProvider(newProvider);
+                  localStorage.setItem('selected-provider', newProvider);
+                }}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
               >
-                {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
+                <option value="claude">Claude</option>
+                <option value="cursor">Cursor</option>
+                <option value="codex">Codex</option>
+                <option value="kimi">Kimi</option>
+                <option value="qwen">Qwen</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="glm">GLM</option>
+                <option value="doubao">Doubao</option>
+                <option value="wenxin">Wenxin</option>
               </select>
-            )}
-            {provider === 'cursor' && (
-              <select
-                value={cursorModel}
-                onChange={(e) => { setCursorModel(e.target.value); localStorage.setItem('cursor-model', e.target.value); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
-              >
-                {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            )}
-            {provider === 'codex' && (
-              <select
-                value={codexModel}
-                onChange={(e) => { setCodexModel(e.target.value); localStorage.setItem('codex-model', e.target.value); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
-              >
-                {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            )}
-            {['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) && (
-              <select
-                value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
-                onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
-              >
-                {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            )}
-            <button
-              type="button"
-              onClick={handleModeSwitch}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                permissionMode === 'default' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  : permissionMode === 'acceptEdits'
-                  ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
-                  : permissionMode === 'bypassPermissions'
-                  ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30'
-                  : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-              }`}
-              title={t('input.clickToChangeMode')}
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  permissionMode === 'default' 
-                    ? 'bg-gray-500'
-                    : permissionMode === 'acceptEdits'
-                    ? 'bg-green-500'
-                    : permissionMode === 'bypassPermissions'
-                    ? 'bg-orange-500'
-                    : 'bg-blue-500'
-                }`} />
-                <span>
-                  {permissionMode === 'default' && t('codex.modes.default')}
-                  {permissionMode === 'acceptEdits' && t('codex.modes.acceptEdits')}
-                  {permissionMode === 'bypassPermissions' && t('codex.modes.bypassPermissions')}
-                  {permissionMode === 'plan' && t('codex.modes.plan')}
-                </span>
-              </div>
-            </button>
-            
-              {/* Thinking Mode Selector */}
-              {
-                provider === 'claude' && (
-
-                  <ThinkingModeSelector
-                    selectedMode={thinkingMode}
-                    onModeChange={setThinkingMode}
-                    className=""
-                  />
-                )}
-            {/* Token usage pie chart - positioned next to mode indicator */}
-            <TokenUsagePie
-              used={tokenBudget?.used || 0}
-              total={tokenBudget?.total || parseInt(import.meta.env.VITE_CONTEXT_WINDOW) || 160000}
-            />
-
-            {/* Slash commands button */}
-            <button
-              type="button"
-              onClick={() => {
-                const isOpening = !showCommandMenu;
-                setShowCommandMenu(isOpening);
-                setCommandQuery('');
-                setSelectedCommandIndex(-1);
-
-                // When opening, ensure all commands are shown
-                if (isOpening) {
-                  setFilteredCommands(slashCommands);
-                }
-
-                if (textareaRef.current) {
-                  textareaRef.current.focus();
-                }
-              }}
-              className="relative w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800"
-              title={t('input.showAllCommands')}
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-                />
-              </svg>
-              {/* Command count badge */}
-              {slashCommands.length > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
-                  style={{ fontSize: '10px' }}
+              {/* Model sub-selector */}
+              {provider === 'claude' && (
+                <select
+                  value={claudeModel}
+                  onChange={(e) => { setClaudeModel(e.target.value); localStorage.setItem('claude-model', e.target.value); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
                 >
-                  {slashCommands.length}
-                </span>
+                  {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
               )}
-            </button>
+              {provider === 'cursor' && (
+                <select
+                  value={cursorModel}
+                  onChange={(e) => { setCursorModel(e.target.value); localStorage.setItem('cursor-model', e.target.value); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+                >
+                  {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              )}
+              {provider === 'codex' && (
+                <select
+                  value={codexModel}
+                  onChange={(e) => { setCodexModel(e.target.value); localStorage.setItem('codex-model', e.target.value); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+                >
+                  {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              )}
+              {['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) && (
+                <select
+                  value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
+                  onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+                >
+                  {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              )}
+            </div>
 
-            {/* Clear input button - positioned to the right of token pie, only shows when there's input */}
-            {input.trim() && (
+            {/* Right group: Permission mode + Thinking mode + extras */}
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setInput('');
+                onClick={handleModeSwitch}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                  permissionMode === 'default'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    : permissionMode === 'acceptEdits'
+                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30'
+                    : permissionMode === 'bypassPermissions'
+                    ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-300 dark:border-orange-600 hover:bg-orange-100 dark:hover:bg-orange-900/30'
+                    : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                }`}
+                title={t('input.clickToChangeMode')}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    permissionMode === 'default'
+                      ? 'bg-gray-500'
+                      : permissionMode === 'acceptEdits'
+                      ? 'bg-green-500'
+                      : permissionMode === 'bypassPermissions'
+                      ? 'bg-orange-500'
+                      : 'bg-blue-500'
+                  }`} />
+                  <span>
+                    {permissionMode === 'default' && t('codex.modes.default')}
+                    {permissionMode === 'acceptEdits' && t('codex.modes.acceptEdits')}
+                    {permissionMode === 'bypassPermissions' && t('codex.modes.bypassPermissions')}
+                    {permissionMode === 'plan' && t('codex.modes.plan')}
+                  </span>
+                </div>
+              </button>
+
+              {/* Thinking Mode Selector */}
+              {provider === 'claude' && (
+                <ThinkingModeSelector
+                  selectedMode={thinkingMode}
+                  onModeChange={setThinkingMode}
+                  className=""
+                />
+              )}
+
+              {/* Token usage pie chart */}
+              <TokenUsagePie
+                used={tokenBudget?.used || 0}
+                total={tokenBudget?.total || parseInt(import.meta.env.VITE_CONTEXT_WINDOW) || 160000}
+              />
+
+              {/* Slash commands button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const isOpening = !showCommandMenu;
+                  setShowCommandMenu(isOpening);
+                  setCommandQuery('');
+                  setSelectedCommandIndex(-1);
+
+                  // When opening, ensure all commands are shown
+                  if (isOpening) {
+                    setFilteredCommands(slashCommands);
+                  }
+
                   if (textareaRef.current) {
-                    textareaRef.current.style.height = 'auto';
                     textareaRef.current.focus();
                   }
-                  setIsTextareaExpanded(false);
                 }}
-                className="w-8 h-8 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center transition-all duration-200 group shadow-sm"
-                title="Clear input"
+                className="relative w-8 h-8 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800"
+                title={t('input.showAllCommands')}
               >
                 <svg
-                  className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-100 transition-colors"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -5449,24 +5423,53 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
                   />
                 </svg>
+                {/* Command count badge */}
+                {slashCommands.length > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                    style={{ fontSize: '10px' }}
+                  >
+                    {slashCommands.length}
+                  </span>
+                )}
               </button>
-            )}
 
-            {/* Scroll to bottom button - positioned next to mode indicator */}
-            {isUserScrolledUp && chatMessages.length > 0 && (
-              <button
-                onClick={scrollToBottom}
-                className="w-8 h-8 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:ring-offset-gray-800"
-                title="Scroll to bottom"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </button>
-            )}
+              {/* Clear input button - only shows when there's input */}
+              {input.trim() && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setInput('');
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = 'auto';
+                      textareaRef.current.focus();
+                    }
+                    setIsTextareaExpanded(false);
+                  }}
+                  className="w-8 h-8 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center transition-all duration-200 group shadow-sm"
+                  title="Clear input"
+                >
+                  <svg
+                    className="w-4 h-4 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 dark:group-hover:text-gray-100 transition-colors"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
         
