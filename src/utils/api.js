@@ -183,3 +183,60 @@ export const api = {
   // Generic GET method for any endpoint
   get: (endpoint) => authenticatedFetch(`/api${endpoint}`),
 };
+
+// AI Providers API
+export const aiProvidersApi = {
+  list: () => authenticatedFetch('/api/ai-providers'),
+  getModels: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/models`),
+  saveApiKey: (providerId, data) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }),
+  deleteApiKey: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key`, {
+    method: 'DELETE'
+  }),
+  getApiKeyStatus: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key/status`)
+};
+
+// Notifications API
+export const notificationsApi = {
+  getConfig: () => authenticatedFetch('/api/notifications/config'),
+  saveConfig: (data) => authenticatedFetch('/api/notifications/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }),
+  updateConfig: (id, data) => authenticatedFetch(`/api/notifications/config/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }),
+  deleteConfig: (id) => authenticatedFetch(`/api/notifications/config/${id}`, {
+    method: 'DELETE'
+  }),
+  sendTest: (configId) => authenticatedFetch('/api/notifications/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ configId })
+  }),
+  getLogs: (limit = 50, offset = 0) => authenticatedFetch(`/api/notifications/log?limit=${limit}&offset=${offset}`)
+};
+
+// User Management API (admin)
+export const usersApi = {
+  list: () => authenticatedFetch('/api/auth/users'),
+  invite: (data) => authenticatedFetch('/api/auth/invite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }),
+  deactivate: (userId) => authenticatedFetch(`/api/auth/users/${userId}`, {
+    method: 'DELETE'
+  }),
+  updateRole: (userId, role) => authenticatedFetch(`/api/auth/users/${userId}/role`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role })
+  })
+};

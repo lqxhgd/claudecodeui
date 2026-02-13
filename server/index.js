@@ -59,25 +59,76 @@ import projectsRoutes, { WORKSPACES_ROOT, validateWorkspacePath } from './routes
 import cliAuthRoutes from './routes/cli-auth.js';
 import userRoutes from './routes/user.js';
 import codexRoutes from './routes/codex.js';
+import notificationsRoutes from './routes/notifications.js';
+import aiProvidersRoutes from './routes/ai-providers.js';
 import { initializeDatabase } from './database/db.js';
-import { validateApiKey, authenticateToken, authenticateWebSocket } from './middleware/auth.js';
+import { validateApiKey, authenticateToken, requireAdmin, authenticateWebSocket } from './middleware/auth.js';
 import { IS_PLATFORM } from './constants/config.js';
+import { queryOpenAICompatible, abortOpenAICompatibleSession, isOpenAICompatibleSessionActive } from './providers/openai-compatible.js';
+import { queryWenxin, abortWenxinSession, isWenxinSessionActive } from './providers/wenxin-sdk.js';
+import { getProviderConfig } from './providers/registry.js';
 
 // File system watcher for projects folder
 let projectsWatcher = null;
-const connectedClients = new Set();
+// Map<userId, Set<WebSocket>> - per-user WebSocket connections
+const connectedClients = new Map();
 let isGetProjectsRunning = false; // Flag to prevent reentrant calls
+
+// Helper: iterate over all connected WebSocket clients across all users
+function forEachClient(callback) {
+    for (const [userId, wsSet] of connectedClients) {
+        for (const client of wsSet) {
+            callback(client, userId);
+        }
+    }
+}
+
+// Helper: add a WebSocket to connectedClients under a userId
+function addConnectedClient(userId, ws) {
+    if (!connectedClients.has(userId)) {
+        connectedClients.set(userId, new Set());
+    }
+    connectedClients.get(userId).add(ws);
+}
+
+// Helper: remove a WebSocket from connectedClients
+function removeConnectedClient(userId, ws) {
+    const wsSet = connectedClients.get(userId);
+    if (wsSet) {
+        wsSet.delete(ws);
+        if (wsSet.size === 0) {
+            connectedClients.delete(userId);
+        }
+    }
+}
+
+// Broadcast a message to all connected WebSocket clients (all users)
+function broadcastToAll(message) {
+    const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+    forEachClient((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(messageStr);
+        }
+    });
+}
+
+// Broadcast a message to all WebSocket connections for a specific user
+function broadcastToUser(userId, message) {
+    const wsSet = connectedClients.get(userId);
+    if (!wsSet) return;
+    const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+    for (const client of wsSet) {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(messageStr);
+        }
+    }
+}
 
 // Broadcast progress to all connected WebSocket clients
 function broadcastProgress(progress) {
-    const message = JSON.stringify({
+    broadcastToAll({
         type: 'loading_progress',
         ...progress
-    });
-    connectedClients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(message);
-        }
     });
 }
 
@@ -132,18 +183,12 @@ async function setupProjectsWatcher() {
                     const updatedProjects = await getProjects(broadcastProgress);
 
                     // Notify all connected clients about the project changes
-                    const updateMessage = JSON.stringify({
+                    broadcastToAll({
                         type: 'projects_updated',
                         projects: updatedProjects,
                         timestamp: new Date().toISOString(),
                         changeType: eventType,
                         changedFile: path.relative(claudeProjectsPath, filePath)
-                    });
-
-                    connectedClients.forEach(client => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send(updateMessage);
-                        }
                     });
 
                 } catch (error) {
@@ -280,8 +325,10 @@ const wss = new WebSocketServer({
     }
 });
 
-// Make WebSocket server available to routes
+// Make WebSocket server and broadcast functions available to routes
 app.locals.wss = wss;
+app.locals.broadcastToAll = broadcastToAll;
+app.locals.broadcastToUser = broadcastToUser;
 
 app.use(cors());
 app.use(express.json({
@@ -343,6 +390,12 @@ app.use('/api/user', authenticateToken, userRoutes);
 
 // Codex API Routes (protected)
 app.use('/api/codex', authenticateToken, codexRoutes);
+
+// Notification Routes
+app.use('/api/notifications', authenticateToken, notificationsRoutes);
+
+// AI Providers Routes (Chinese AI models)
+app.use('/api/ai-providers', authenticateToken, aiProvidersRoutes);
 
 // Agent API Routes (uses API key authentication)
 app.use('/api/agent', agentRoutes);
@@ -847,6 +900,9 @@ wss.on('connection', (ws, request) => {
     const url = request.url;
     console.log('[INFO] Client connected to:', url);
 
+    // Store authenticated user info on the ws object (set by verifyClient)
+    ws.user = request.user || null;
+
     // Parse URL to get pathname without query parameters
     const urlObj = new URL(url, 'http://localhost');
     const pathname = urlObj.pathname;
@@ -891,8 +947,13 @@ class WebSocketWriter {
 function handleChatConnection(ws) {
     console.log('[INFO] Chat WebSocket connected');
 
-    // Add to connected clients for project updates
-    connectedClients.add(ws);
+    // Get userId from the authenticated user info stored on ws
+    const userId = ws.user?.userId || null;
+
+    // Add to connected clients for project updates (keyed by userId)
+    if (userId) {
+        addConnectedClient(userId, ws);
+    }
 
     // Wrap WebSocket with writer for consistent interface with SSEStreamWriter
     const writer = new WebSocketWriter(ws);
@@ -906,27 +967,52 @@ function handleChatConnection(ws) {
                 console.log('📁 Project:', data.options?.projectPath || 'Unknown');
                 console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
 
+                // Include userId in options for per-user tracking
+                const options = { ...data.options, userId };
                 // Use Claude Agents SDK
-                await queryClaudeSDK(data.command, data.options, writer);
+                await queryClaudeSDK(data.command, options, writer);
             } else if (data.type === 'cursor-command') {
                 console.log('[DEBUG] Cursor message:', data.command || '[Continue/Resume]');
                 console.log('📁 Project:', data.options?.cwd || 'Unknown');
                 console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
                 console.log('🤖 Model:', data.options?.model || 'default');
-                await spawnCursor(data.command, data.options, writer);
+                const options = { ...data.options, userId };
+                await spawnCursor(data.command, options, writer);
             } else if (data.type === 'codex-command') {
                 console.log('[DEBUG] Codex message:', data.command || '[Continue/Resume]');
                 console.log('📁 Project:', data.options?.projectPath || data.options?.cwd || 'Unknown');
                 console.log('🔄 Session:', data.options?.sessionId ? 'Resume' : 'New');
                 console.log('🤖 Model:', data.options?.model || 'default');
-                await queryCodex(data.command, data.options, writer);
+                const options = { ...data.options, userId };
+                await queryCodex(data.command, options, writer);
+            } else if (data.type === 'ai-command') {
+                // Chinese AI models (Kimi, Qwen, DeepSeek, GLM, Doubao, Wenxin)
+                const providerId = data.provider;
+                const providerConfig = getProviderConfig(providerId);
+                console.log(`[DEBUG] AI command for ${providerId}:`, data.command?.slice(0, 100) || '[empty]');
+                console.log('📁 Project:', data.options?.cwd || 'Unknown');
+                console.log('🤖 Model:', data.options?.model || 'default');
+
+                if (!providerConfig) {
+                    writer.send({ type: 'error', error: `Unknown provider: ${providerId}` });
+                } else {
+                    const options = { ...data.options, provider: providerId, userId };
+                    if (providerConfig.type === 'openai-compatible') {
+                        await queryOpenAICompatible(data.command, options, writer);
+                    } else if (providerConfig.type === 'wenxin') {
+                        await queryWenxin(data.command, options, writer);
+                    } else {
+                        writer.send({ type: 'error', error: `Unsupported provider type: ${providerConfig.type}` });
+                    }
+                }
             } else if (data.type === 'cursor-resume') {
                 // Backward compatibility: treat as cursor-command with resume and no prompt
                 console.log('[DEBUG] Cursor resume session (compat):', data.sessionId);
                 await spawnCursor('', {
                     sessionId: data.sessionId,
                     resume: true,
-                    cwd: data.options?.cwd
+                    cwd: data.options?.cwd,
+                    userId
                 }, writer);
             } else if (data.type === 'abort-session') {
                 console.log('[DEBUG] Abort session request:', data.sessionId);
@@ -937,6 +1023,10 @@ function handleChatConnection(ws) {
                     success = abortCursorSession(data.sessionId);
                 } else if (provider === 'codex') {
                     success = abortCodexSession(data.sessionId);
+                } else if (['kimi', 'qwen', 'deepseek', 'glm', 'doubao'].includes(provider)) {
+                    success = await abortOpenAICompatibleSession(data.sessionId);
+                } else if (provider === 'wenxin') {
+                    success = await abortWenxinSession(data.sessionId);
                 } else {
                     // Use Claude Agents SDK
                     success = await abortClaudeSDKSession(data.sessionId);
@@ -979,6 +1069,10 @@ function handleChatConnection(ws) {
                     isActive = isCursorSessionActive(sessionId);
                 } else if (provider === 'codex') {
                     isActive = isCodexSessionActive(sessionId);
+                } else if (['kimi', 'qwen', 'deepseek', 'glm', 'doubao'].includes(provider)) {
+                    isActive = isOpenAICompatibleSessionActive(sessionId);
+                } else if (provider === 'wenxin') {
+                    isActive = isWenxinSessionActive(sessionId);
                 } else {
                     // Use Claude Agents SDK
                     isActive = isClaudeSDKSessionActive(sessionId);
@@ -991,11 +1085,15 @@ function handleChatConnection(ws) {
                     isProcessing: isActive
                 });
             } else if (data.type === 'get-active-sessions') {
-                // Get all currently active sessions
+                // Get all currently active sessions (including Chinese AI providers)
+                const { getOpenAICompatibleActiveSessions } = await import('./providers/openai-compatible.js');
+                const { getWenxinActiveSessions } = await import('./providers/wenxin-sdk.js');
                 const activeSessions = {
                     claude: getActiveClaudeSDKSessions(),
                     cursor: getActiveCursorSessions(),
-                    codex: getActiveCodexSessions()
+                    codex: getActiveCodexSessions(),
+                    openai_compatible: getOpenAICompatibleActiveSessions(),
+                    wenxin: getWenxinActiveSessions()
                 };
                 writer.send({
                     type: 'active-sessions',
@@ -1013,8 +1111,10 @@ function handleChatConnection(ws) {
 
     ws.on('close', () => {
         console.log('🔌 Chat client disconnected');
-        // Remove from connected clients
-        connectedClients.delete(ws);
+        // Remove from connected clients (per-user map)
+        if (userId) {
+            removeConnectedClient(userId, ws);
+        }
     });
 }
 

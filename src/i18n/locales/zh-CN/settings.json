@@ -88,7 +88,10 @@
     "appearance": "外观",
     "git": "Git",
     "apiTokens": "API 和令牌",
-    "tasks": "任务"
+    "tasks": "任务",
+    "aiProviders": "AI 模型",
+    "notifications": "通知",
+    "users": "用户管理"
   },
   "appearanceSettings": {
     "darkMode": {
@@ -413,6 +416,61 @@
     "help": {
       "title": "关于 Codex MCP",
       "description": "Codex 支持基于 stdio 的 MCP 服务器。您可以添加服务器，通过额外的工具和资源来扩展 Codex 的功能。"
+    }
+  },
+  "userManagement": {
+    "title": "用户管理",
+    "description": "管理用户、角色和系统访问权限",
+    "loading": "加载用户中...",
+    "empty": "暂无用户。",
+    "inviteUser": "邀请用户",
+    "inviteFormTitle": "邀请新用户",
+    "fields": {
+      "username": "用户名",
+      "password": "密码",
+      "role": "角色",
+      "createdAt": "创建时间",
+      "lastLogin": "最后登录"
+    },
+    "placeholders": {
+      "username": "输入用户名",
+      "password": "输入密码（至少6个字符）"
+    },
+    "roles": {
+      "admin": "管理员",
+      "user": "用户"
+    },
+    "status": {
+      "active": "已激活",
+      "inactive": "已停用",
+      "you": "你"
+    },
+    "actions": {
+      "cancel": "取消",
+      "invite": "邀请用户",
+      "inviting": "邀请中...",
+      "promoteToAdmin": "设为管理员",
+      "demoteToUser": "设为用户",
+      "deactivate": "停用",
+      "reactivate": "启用"
+    },
+    "success": {
+      "roleChanged": "用户角色已更改为{{role}}",
+      "userDeactivated": "用户已停用",
+      "userReactivated": "用户已启用",
+      "userInvited": "用户邀请成功"
+    },
+    "errors": {
+      "fetchFailed": "加载用户列表失败",
+      "roleChangeFailed": "更改用户角色失败",
+      "deactivateFailed": "停用用户失败",
+      "reactivateFailed": "启用用户失败",
+      "toggleActiveFailed": "更改用户状态失败",
+      "inviteFailed": "邀请用户失败"
+    },
+    "confirm": {
+      "deactivate": "确定要停用此用户吗？",
+      "changeRole": "确定要更改此用户的角色吗？"
     }
   }
 }

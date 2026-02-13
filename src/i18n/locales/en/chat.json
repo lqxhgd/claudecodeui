@@ -153,10 +153,17 @@
       "openai": "by OpenAI",
       "cursorEditor": "AI Code Editor"
     },
+    "chineseModels": "Chinese AI Models",
     "readyPrompt": {
       "claude": "Ready to use Claude with {{model}}. Start typing your message below.",
       "cursor": "Ready to use Cursor with {{model}}. Start typing your message below.",
       "codex": "Ready to use Codex with {{model}}. Start typing your message below.",
+      "kimi": "Ready to use Kimi with {{model}}. Start typing your message below.",
+      "qwen": "Ready to use Qwen with {{model}}. Start typing your message below.",
+      "deepseek": "Ready to use DeepSeek with {{model}}. Start typing your message below.",
+      "glm": "Ready to use GLM with {{model}}. Start typing your message below.",
+      "doubao": "Ready to use Doubao with {{model}}. Start typing your message below.",
+      "wenxin": "Ready to use Wenxin with {{model}}. Start typing your message below.",
       "default": "Select a provider above to begin"
     }
   },

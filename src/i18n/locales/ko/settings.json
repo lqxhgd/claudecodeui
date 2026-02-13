@@ -88,7 +88,10 @@
     "appearance": "외관",
     "git": "Git",
     "apiTokens": "API & 토큰",
-    "tasks": "작업"
+    "tasks": "작업",
+    "aiProviders": "AI 모델",
+    "notifications": "알림",
+    "users": "사용자 관리"
   },
   "appearanceSettings": {
     "darkMode": {
@@ -413,6 +416,61 @@
     "help": {
       "title": "Codex MCP 정보",
       "description": "Codex는 stdio 기반 MCP 서버를 지원합니다. 추가 도구와 리소스로 Codex의 기능을 확장하는 서버를 추가할 수 있습니다."
+    }
+  },
+  "userManagement": {
+    "title": "사용자 관리",
+    "description": "사용자, 역할 및 시스템 접근 권한을 관리합니다",
+    "loading": "사용자 로딩 중...",
+    "empty": "사용자가 없습니다.",
+    "inviteUser": "사용자 초대",
+    "inviteFormTitle": "새 사용자 초대",
+    "fields": {
+      "username": "사용자명",
+      "password": "비밀번호",
+      "role": "역할",
+      "createdAt": "생성일",
+      "lastLogin": "마지막 로그인"
+    },
+    "placeholders": {
+      "username": "사용자명 입력",
+      "password": "비밀번호 입력 (최소 6자)"
+    },
+    "roles": {
+      "admin": "관리자",
+      "user": "사용자"
+    },
+    "status": {
+      "active": "활성",
+      "inactive": "비활성",
+      "you": "나"
+    },
+    "actions": {
+      "cancel": "취소",
+      "invite": "사용자 초대",
+      "inviting": "초대 중...",
+      "promoteToAdmin": "관리자로 설정",
+      "demoteToUser": "사용자로 설정",
+      "deactivate": "비활성화",
+      "reactivate": "활성화"
+    },
+    "success": {
+      "roleChanged": "사용자 역할이 {{role}}(으)로 변경되었습니다",
+      "userDeactivated": "사용자가 비활성화되었습니다",
+      "userReactivated": "사용자가 활성화되었습니다",
+      "userInvited": "사용자가 성공적으로 초대되었습니다"
+    },
+    "errors": {
+      "fetchFailed": "사용자 목록을 불러오지 못했습니다",
+      "roleChangeFailed": "사용자 역할 변경에 실패했습니다",
+      "deactivateFailed": "사용자 비활성화에 실패했습니다",
+      "reactivateFailed": "사용자 활성화에 실패했습니다",
+      "toggleActiveFailed": "사용자 상태 변경에 실패했습니다",
+      "inviteFailed": "사용자 초대에 실패했습니다"
+    },
+    "confirm": {
+      "deactivate": "이 사용자를 비활성화하시겠습니까?",
+      "changeRole": "이 사용자의 역할을 변경하시겠습니까?"
     }
   }
 }

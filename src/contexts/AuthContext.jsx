@@ -5,6 +5,7 @@ import { IS_PLATFORM } from '../constants/config';
 const AuthContext = createContext({
   user: null,
   token: null,
+  isAdmin: false,
   login: () => {},
   register: () => {},
   logout: () => {},
@@ -168,9 +169,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const isAdmin = user?.role === 'admin';
+
   const value = {
     user,
     token,
+    isAdmin,
     login,
     register,
     logout,

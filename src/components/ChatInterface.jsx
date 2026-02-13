@@ -28,6 +28,12 @@ import TodoList from './TodoList';
 import ClaudeLogo from './ClaudeLogo.jsx';
 import CursorLogo from './CursorLogo.jsx';
 import CodexLogo from './CodexLogo.jsx';
+import KimiLogo from './KimiLogo.jsx';
+import QwenLogo from './QwenLogo.jsx';
+import DeepSeekLogo from './DeepSeekLogo.jsx';
+import GLMLogo from './GLMLogo.jsx';
+import DoubaoLogo from './DoubaoLogo.jsx';
+import WenxinLogo from './WenxinLogo.jsx';
 import NextTaskBanner from './NextTaskBanner.jsx';
 import { useTasksSettings } from '../contexts/TasksSettingsContext';
 import { useTranslation } from 'react-i18next';
@@ -39,7 +45,7 @@ import { api, authenticatedFetch } from '../utils/api';
 import ThinkingModeSelector, { thinkingModes } from './ThinkingModeSelector.jsx';
 import Fuse from 'fuse.js';
 import CommandMenu from './CommandMenu';
-import { CLAUDE_MODELS, CURSOR_MODELS, CODEX_MODELS } from '../../shared/modelConstants';
+import { CLAUDE_MODELS, CURSOR_MODELS, CODEX_MODELS, CHINESE_MODELS, getModelsForProvider } from '../../shared/modelConstants';
 
 import { safeJsonParse } from '../lib/utils.js';
 
@@ -4539,6 +4545,19 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
           permissionMode: permissionMode === 'plan' ? 'default' : permissionMode
         }
       });
+    } else if (['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider)) {
+      // Send Chinese AI model command via unified ai-command type
+      sendMessage({
+        type: 'ai-command',
+        provider: provider,
+        command: messageContent,
+        options: {
+          cwd: selectedProject.fullPath || selectedProject.path,
+          projectPath: selectedProject.fullPath || selectedProject.path,
+          sessionId: effectiveSessionId,
+          model: safeLocalStorage.getItem(`${provider}-model`) || undefined
+        }
+      });
     } else {
       // Send Claude command (existing code)
       sendMessage({
@@ -5056,6 +5075,49 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                   </button>
                 </div>
 
+                {/* Chinese AI Models Section */}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">{t('providerSelection.chineseModels', 'Chinese AI Models')}</p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {[
+                      { id: 'kimi', label: 'Kimi', Logo: KimiLogo, color: 'purple' },
+                      { id: 'qwen', label: '通义千问', Logo: QwenLogo, color: 'indigo' },
+                      { id: 'deepseek', label: 'DeepSeek', Logo: DeepSeekLogo, color: 'blue' },
+                      { id: 'glm', label: '智谱GLM', Logo: GLMLogo, color: 'sky' },
+                      { id: 'doubao', label: '豆包', Logo: DoubaoLogo, color: 'orange' },
+                      { id: 'wenxin', label: '文心一言', Logo: WenxinLogo, color: 'blue' }
+                    ].map(({ id, label, Logo, color }) => (
+                      <button
+                        key={id}
+                        onClick={() => {
+                          setProvider(id);
+                          localStorage.setItem('selected-provider', id);
+                          setTimeout(() => textareaRef.current?.focus(), 100);
+                        }}
+                        className={`group relative w-36 h-24 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                          provider === id
+                            ? `border-${color}-500 shadow-lg ring-2 ring-${color}-500/20`
+                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center justify-center h-full gap-2">
+                          <Logo className="w-8 h-8" />
+                          <p className="font-medium text-sm text-gray-900 dark:text-white">{label}</p>
+                        </div>
+                        {provider === id && (
+                          <div className="absolute top-1.5 right-1.5">
+                            <div className={`w-4 h-4 bg-${color}-500 rounded-full flex items-center justify-center`}>
+                              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Model Selection - Always reserve space to prevent jumping */}
                 <div className={`mb-6 transition-opacity duration-200 ${provider ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -5089,6 +5151,18 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>
+                  ) : ['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) ? (
+                    <select
+                      value={safeLocalStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
+                      onChange={(e) => {
+                        safeLocalStorage.setItem(`${provider}-model`, e.target.value);
+                      }}
+                      className="pl-4 pr-10 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
+                    >
+                      {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
                   ) : (
                     <select
                       value={cursorModel}
@@ -5114,6 +5188,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                     ? t('providerSelection.readyPrompt.cursor', { model: cursorModel })
                     : provider === 'codex'
                     ? t('providerSelection.readyPrompt.codex', { model: codexModel })
+                    : ['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider)
+                    ? t('providerSelection.readyPrompt.chinese', {
+                        provider: provider,
+                        model: safeLocalStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')
+                      })
                     : t('providerSelection.readyPrompt.default')
                   }
                 </p>

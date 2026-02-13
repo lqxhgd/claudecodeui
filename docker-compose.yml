@@ -1,0 +1,33 @@
+services:
+  claudecodeui:
+    build: .
+    ports:
+      - "${PORT:-3001}:3001"
+    volumes:
+      - data:/data
+    environment:
+      - DATABASE_PATH=/data/auth.db
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - PORT=3001
+      - CONTEXT_WINDOW=${CONTEXT_WINDOW:-160000}
+      - ALLOW_SELF_REGISTRATION=${ALLOW_SELF_REGISTRATION:-true}
+      # Chinese AI model API keys (optional)
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY:-}
+      - BAIDU_API_KEY=${BAIDU_API_KEY:-}
+      - BAIDU_SECRET_KEY=${BAIDU_SECRET_KEY:-}
+      # WeChat Work notification (optional)
+      - WECHAT_WORK_WEBHOOK_URL=${WECHAT_WORK_WEBHOOK_URL:-}
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  data:

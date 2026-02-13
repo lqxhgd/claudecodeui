@@ -153,10 +153,17 @@
       "openai": "OpenAI",
       "cursorEditor": "AI 代码编辑器"
     },
+    "chineseModels": "国产 AI 模型",
     "readyPrompt": {
       "claude": "已准备好使用 Claude {{model}}。在下方输入您的消息。",
       "cursor": "已准备好使用 Cursor {{model}}。在下方输入您的消息。",
       "codex": "已准备好使用 Codex {{model}}。在下方输入您的消息。",
+      "kimi": "已准备好使用 Kimi {{model}}。在下方输入您的消息。",
+      "qwen": "已准备好使用通义千问 {{model}}。在下方输入您的消息。",
+      "deepseek": "已准备好使用 DeepSeek {{model}}。在下方输入您的消息。",
+      "glm": "已准备好使用智谱 GLM {{model}}。在下方输入您的消息。",
+      "doubao": "已准备好使用豆包 {{model}}。在下方输入您的消息。",
+      "wenxin": "已准备好使用文心一言 {{model}}。在下方输入您的消息。",
       "default": "请在上方选择一个供应商以开始"
     }
   },

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
-import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check } from 'lucide-react';
+import { X, Plus, Settings as SettingsIcon, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Globe, Terminal, Zap, FolderOpen, LogIn, Key, GitBranch, Check, Users, Bot, Bell } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import ClaudeLogo from './ClaudeLogo';
 import CursorLogo from './CursorLogo';
@@ -20,9 +21,13 @@ import AccountContent from './settings/AccountContent';
 import PermissionsContent from './settings/PermissionsContent';
 import McpServersContent from './settings/McpServersContent';
 import LanguageSelector from './LanguageSelector';
+import UserManagement from './settings/UserManagement';
+import AIProvidersContent from './settings/AIProvidersContent';
+import NotificationContent from './settings/NotificationContent';
 
 function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
+  const { isAdmin } = useAuth();
   const { t } = useTranslation('settings');
   const [allowedTools, setAllowedTools] = useState([]);
   const [disallowedTools, setDisallowedTools] = useState([]);
@@ -1019,6 +1024,41 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
               >
                 {t('mainTabs.tasks')}
               </button>
+              <button
+                onClick={() => setActiveTab('ai-providers')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'ai-providers'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Bot className="w-4 h-4 inline mr-2" />
+                {t('mainTabs.aiProviders', 'AI Models')}
+              </button>
+              <button
+                onClick={() => setActiveTab('notifications')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'notifications'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Bell className="w-4 h-4 inline mr-2" />
+                {t('mainTabs.notifications', 'Notifications')}
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab('users')}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'users'
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Users className="w-4 h-4 inline mr-2" />
+                  {t('mainTabs.users')}
+                </button>
+              )}
             </div>
           </div>
 
@@ -1907,6 +1947,27 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {activeTab === 'api' && (
               <div className="space-y-6 md:space-y-8">
                 <CredentialsSettings />
+              </div>
+            )}
+
+            {/* AI Providers Tab */}
+            {activeTab === 'ai-providers' && (
+              <div className="space-y-6 md:space-y-8">
+                <AIProvidersContent />
+              </div>
+            )}
+
+            {/* Notifications Tab */}
+            {activeTab === 'notifications' && (
+              <div className="space-y-6 md:space-y-8">
+                <NotificationContent />
+              </div>
+            )}
+
+            {/* Users Tab (Admin only) */}
+            {activeTab === 'users' && isAdmin && (
+              <div className="space-y-6 md:space-y-8">
+                <UserManagement />
               </div>
             )}
           </div>

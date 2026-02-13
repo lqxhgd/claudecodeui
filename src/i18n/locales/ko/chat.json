@@ -153,10 +153,17 @@
       "openai": "by OpenAI",
       "cursorEditor": "AI 코드 에디터"
     },
+    "chineseModels": "중국 AI 모델",
     "readyPrompt": {
       "claude": "{{model}}로 Claude를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
       "cursor": "{{model}}로 Cursor를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
       "codex": "{{model}}로 Codex를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "kimi": "{{model}}로 Kimi를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "qwen": "{{model}}로 Qwen을 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "deepseek": "{{model}}로 DeepSeek를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "glm": "{{model}}로 GLM을 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "doubao": "{{model}}로 Doubao를 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
+      "wenxin": "{{model}}로 Wenxin을 사용할 준비가 되었습니다. 아래에 메시지를 입력하세요.",
       "default": "시작하려면 위에서 프로바이더를 선택하세요"
     }
   },

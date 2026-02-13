@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import { extractProjectDirectory } from '../projects.js';
 import { queryClaudeSDK } from '../claude-sdk.js';
 import { spawnCursor } from '../cursor-cli.js';
+import NotificationService from '../services/notification.js';
 
 const router = express.Router();
 const execAsync = promisify(exec);
@@ -343,8 +344,23 @@ router.post('/commit', async (req, res) => {
     
     // Commit with message
     const { stdout } = await execAsync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: projectPath });
-    
+
     res.json({ success: true, output: stdout });
+
+    // Fire notification (non-blocking)
+    let branch = 'unknown';
+    try {
+      const { stdout: branchOut } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: projectPath });
+      branch = branchOut.trim();
+    } catch (_) { /* ignore */ }
+    NotificationService.notify(req.user?.id, 'git_commit', {
+      project: project,
+      message: message,
+      files: files || [],
+      author: req.user?.username,
+      branch: branch,
+      timestamp: new Date().toISOString()
+    }).catch(err => console.error('Commit notification failed:', err.message));
   } catch (error) {
     console.error('Git commit error:', error);
     res.status(500).json({ error: error.message });

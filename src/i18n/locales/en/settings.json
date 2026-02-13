@@ -88,7 +88,10 @@
     "appearance": "Appearance",
     "git": "Git",
     "apiTokens": "API & Tokens",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "aiProviders": "AI Models",
+    "notifications": "Notifications",
+    "users": "Users"
   },
   "appearanceSettings": {
     "darkMode": {
@@ -413,6 +416,61 @@
     "help": {
       "title": "About Codex MCP",
       "description": "Codex supports stdio-based MCP servers. You can add servers that extend Codex's capabilities with additional tools and resources."
+    }
+  },
+  "userManagement": {
+    "title": "User Management",
+    "description": "Manage users, roles, and access to the system",
+    "loading": "Loading users...",
+    "empty": "No users found.",
+    "inviteUser": "Invite User",
+    "inviteFormTitle": "Invite New User",
+    "fields": {
+      "username": "Username",
+      "password": "Password",
+      "role": "Role",
+      "createdAt": "Created",
+      "lastLogin": "Last login"
+    },
+    "placeholders": {
+      "username": "Enter username",
+      "password": "Enter password (min 6 characters)"
+    },
+    "roles": {
+      "admin": "Admin",
+      "user": "User"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "you": "You"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "invite": "Invite User",
+      "inviting": "Inviting...",
+      "promoteToAdmin": "Make Admin",
+      "demoteToUser": "Make User",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate"
+    },
+    "success": {
+      "roleChanged": "User role changed to {{role}}",
+      "userDeactivated": "User has been deactivated",
+      "userReactivated": "User has been reactivated",
+      "userInvited": "User has been invited successfully"
+    },
+    "errors": {
+      "fetchFailed": "Failed to load users",
+      "roleChangeFailed": "Failed to change user role",
+      "deactivateFailed": "Failed to deactivate user",
+      "reactivateFailed": "Failed to reactivate user",
+      "toggleActiveFailed": "Failed to change user status",
+      "inviteFailed": "Failed to invite user"
+    },
+    "confirm": {
+      "deactivate": "Are you sure you want to deactivate this user?",
+      "changeRole": "Are you sure you want to change this user's role?"
     }
   }
 }
