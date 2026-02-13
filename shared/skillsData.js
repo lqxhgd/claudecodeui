@@ -35,6 +35,164 @@ export const SKILL_CATEGORIES = [
   }
 ];
 
+/**
+ * Trending skills from skills.sh — top 10 by all-time installs
+ * Source: https://skills.sh/
+ * Last updated: 2026-02-14
+ */
+export const HOT_SKILLS = [
+  {
+    id: 'hot-find-skills',
+    name: 'find-skills',
+    title: 'Find Skills',
+    titleZh: '发现技能',
+    description: 'Discover and install skills from the open agent skills ecosystem. Search for skills interactively or by keyword.',
+    descriptionZh: '从开放的 Agent 技能生态中发现和安装技能，支持交互式搜索或按关键词搜索。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/skills',
+    category: 'productivity',
+    installs: '210.0K',
+    rank: 1,
+    url: 'https://skills.sh/vercel-labs/skills/find-skills',
+    tags: ['discovery', 'ecosystem', 'tools']
+  },
+  {
+    id: 'hot-vercel-react-best-practices',
+    name: 'vercel-react-best-practices',
+    title: 'Vercel React Best Practices',
+    titleZh: 'Vercel React 最佳实践',
+    description: 'Comprehensive performance optimization guide for React and Next.js applications. Contains 57 rules across 8 categories, prioritized by impact.',
+    descriptionZh: 'React 和 Next.js 应用的全面性能优化指南，包含 8 个类别中的 57 条规则，按影响力排序。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/agent-skills',
+    category: 'code-quality',
+    installs: '128.8K',
+    rank: 2,
+    url: 'https://skills.sh/vercel-labs/agent-skills/vercel-react-best-practices',
+    tags: ['react', 'nextjs', 'performance']
+  },
+  {
+    id: 'hot-web-design-guidelines',
+    name: 'web-design-guidelines',
+    title: 'Web Design Guidelines',
+    titleZh: 'Web 设计规范',
+    description: 'Review files for compliance with Web Interface Guidelines. Ensure your web UI follows modern design standards and best practices.',
+    descriptionZh: '审查文件是否符合 Web 界面设计规范，确保 UI 遵循现代设计标准和最佳实践。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/agent-skills',
+    category: 'code-quality',
+    installs: '96.6K',
+    rank: 3,
+    url: 'https://skills.sh/vercel-labs/agent-skills/web-design-guidelines',
+    tags: ['design', 'ui', 'guidelines']
+  },
+  {
+    id: 'hot-remotion-best-practices',
+    name: 'remotion-best-practices',
+    title: 'Remotion Best Practices',
+    titleZh: 'Remotion 最佳实践',
+    description: 'Domain-specific knowledge for Remotion code. Use this skill whenever dealing with Remotion video generation projects.',
+    descriptionZh: 'Remotion 视频生成项目的领域特定知识，处理 Remotion 代码时可使用此技能。',
+    author: 'remotion-dev',
+    repo: 'remotion-dev/skills',
+    category: 'productivity',
+    installs: '88.4K',
+    rank: 4,
+    url: 'https://skills.sh/remotion-dev/skills/remotion-best-practices',
+    tags: ['remotion', 'video', 'react']
+  },
+  {
+    id: 'hot-frontend-design',
+    name: 'frontend-design',
+    title: 'Frontend Design',
+    titleZh: '前端设计',
+    description: 'Create distinctive, production-grade frontend interfaces that avoid generic AI aesthetics. Implement real working code with exceptional attention to aesthetic details.',
+    descriptionZh: '创建独特的生产级前端界面，避免千篇一律的 AI 风格，实现精美细节的真实可用代码。',
+    author: 'anthropics',
+    repo: 'anthropics/skills',
+    category: 'code-quality',
+    installs: '66.0K',
+    rank: 5,
+    url: 'https://skills.sh/anthropics/skills/frontend-design',
+    tags: ['frontend', 'design', 'ui']
+  },
+  {
+    id: 'hot-vercel-composition-patterns',
+    name: 'vercel-composition-patterns',
+    title: 'Vercel Composition Patterns',
+    titleZh: 'Vercel 组合模式',
+    description: 'Composition patterns for building flexible, maintainable React components. Use compound components, lift state, and compose internals to scale codebases.',
+    descriptionZh: '构建灵活可维护 React 组件的组合模式，使用复合组件、状态提升和内部组合来扩展代码库。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/agent-skills',
+    category: 'code-quality',
+    installs: '38.6K',
+    rank: 6,
+    url: 'https://skills.sh/vercel-labs/agent-skills/vercel-composition-patterns',
+    tags: ['react', 'patterns', 'architecture']
+  },
+  {
+    id: 'hot-agent-browser',
+    name: 'agent-browser',
+    title: 'Agent Browser',
+    titleZh: '代理浏览器',
+    description: 'Browser automation with agent-browser. Enables AI agents to navigate, interact with, and extract data from web pages programmatically.',
+    descriptionZh: '使用 Agent Browser 进行浏览器自动化，让 AI 代理能够以编程方式浏览、交互和提取网页数据。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/agent-browser',
+    category: 'devops',
+    installs: '33.9K',
+    rank: 7,
+    url: 'https://skills.sh/vercel-labs/agent-browser/agent-browser',
+    tags: ['browser', 'automation', 'scraping']
+  },
+  {
+    id: 'hot-skill-creator',
+    name: 'skill-creator',
+    title: 'Skill Creator',
+    titleZh: '技能创建器',
+    description: 'Guidance for creating effective skills. Helps you author, structure, and publish your own custom skills for the agent ecosystem.',
+    descriptionZh: '创建有效技能的指导工具，帮助你编写、构建和发布自定义 Agent 技能。',
+    author: 'anthropics',
+    repo: 'anthropics/skills',
+    category: 'productivity',
+    installs: '32.7K',
+    rank: 8,
+    url: 'https://skills.sh/anthropics/skills/skill-creator',
+    tags: ['skills', 'authoring', 'ecosystem']
+  },
+  {
+    id: 'hot-browser-use',
+    name: 'browser-use',
+    title: 'Browser Use',
+    titleZh: '浏览器使用',
+    description: 'Browser automation with browser-use CLI. Control browsers programmatically for testing, scraping, and automating web workflows.',
+    descriptionZh: '通过 browser-use CLI 进行浏览器自动化，以编程方式控制浏览器进行测试、抓取和自动化 Web 工作流。',
+    author: 'browser-use',
+    repo: 'browser-use/browser-use',
+    category: 'devops',
+    installs: '28.5K',
+    rank: 9,
+    url: 'https://skills.sh/browser-use/browser-use/browser-use',
+    tags: ['browser', 'automation', 'testing']
+  },
+  {
+    id: 'hot-vercel-react-native-skills',
+    name: 'vercel-react-native-skills',
+    title: 'React Native Best Practices',
+    titleZh: 'React Native 最佳实践',
+    description: 'Comprehensive best practices for React Native and Expo applications. Covers performance, animations, UI patterns, and platform-specific optimizations.',
+    descriptionZh: 'React Native 和 Expo 应用的全面最佳实践，涵盖性能、动画、UI 模式和平台特定优化。',
+    author: 'vercel-labs',
+    repo: 'vercel-labs/agent-skills',
+    category: 'code-quality',
+    installs: '27.8K',
+    rank: 10,
+    url: 'https://skills.sh/vercel-labs/agent-skills/vercel-react-native-skills',
+    tags: ['react-native', 'expo', 'mobile']
+  }
+];
+
 export const POPULAR_SKILLS = [
   {
     id: 'review-pr',

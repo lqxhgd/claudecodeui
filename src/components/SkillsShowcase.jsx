@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Copy, Check, Terminal, User, TrendingUp } from 'lucide-react';
+import { Search, Copy, Check, Terminal, User, TrendingUp, ExternalLink, Flame } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { SKILL_CATEGORIES, POPULAR_SKILLS } from '../../shared/skillsData.js';
+import { SKILL_CATEGORIES, POPULAR_SKILLS, HOT_SKILLS } from '../../shared/skillsData.js';
 
 function SkillsShowcase({ onUseSkill }) {
   const { i18n } = useTranslation();
@@ -10,6 +10,9 @@ function SkillsShowcase({ onUseSkill }) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedSkillId, setCopiedSkillId] = useState(null);
+  const [showAllHot, setShowAllHot] = useState(false);
+
+  const visibleHotSkills = showAllHot ? HOT_SKILLS : HOT_SKILLS.slice(0, 5);
 
   const filteredSkills = useMemo(() => {
     let skills = POPULAR_SKILLS;
@@ -71,6 +74,101 @@ function SkillsShowcase({ onUseSkill }) {
             ? '浏览和使用热门的 Claude Code 技能与斜杠命令'
             : 'Browse and use popular Claude Code skills and slash commands'}
         </p>
+      </div>
+
+      {/* Trending from skills.sh */}
+      <div className="relative overflow-hidden rounded-xl border border-orange-200 dark:border-orange-800/50 bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/30 dark:via-amber-950/20 dark:to-yellow-950/10">
+        {/* Banner Header */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-orange-200/60 dark:border-orange-800/30 bg-gradient-to-r from-orange-100/80 to-amber-100/80 dark:from-orange-900/30 dark:to-amber-900/20">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-500" />
+            <h4 className="text-sm font-bold text-orange-800 dark:text-orange-300">
+              {isZh ? 'skills.sh 热门趋势' : 'Trending from skills.sh'}
+            </h4>
+            <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-orange-500 text-white">
+              HOT
+            </span>
+          </div>
+          <a
+            href="https://skills.sh/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 transition-colors font-medium"
+          >
+            {isZh ? '查看全部' : 'View all'}
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
+
+        {/* Hot Skills List */}
+        <div className="divide-y divide-orange-100 dark:divide-orange-900/30">
+          {visibleHotSkills.map((skill) => (
+            <div
+              key={skill.id}
+              className="flex items-center gap-4 px-5 py-3 hover:bg-orange-100/40 dark:hover:bg-orange-900/20 transition-colors group"
+            >
+              {/* Rank */}
+              <span className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full text-xs font-bold ${
+                skill.rank <= 3
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300'
+              }`}>
+                {skill.rank}
+              </span>
+
+              {/* Skill Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-foreground truncate">
+                    {isZh ? skill.titleZh : skill.title}
+                  </span>
+                  <code className="hidden sm:inline text-[10px] font-mono text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-1.5 py-0.5 rounded">
+                    {skill.name}
+                  </code>
+                </div>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
+                  {isZh ? skill.descriptionZh : skill.description}
+                </p>
+              </div>
+
+              {/* Author + Installs */}
+              <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  {skill.author}
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 tabular-nums">
+                  <TrendingUp className="w-3 h-3" />
+                  {skill.installs}
+                </span>
+              </div>
+
+              {/* Link */}
+              <a
+                href={skill.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-orange-500 text-white hover:bg-orange-600 active:scale-95 shadow-sm transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              >
+                <ExternalLink className="w-3 h-3" />
+                {isZh ? '查看' : 'View'}
+              </a>
+            </div>
+          ))}
+        </div>
+
+        {/* Show More / Show Less */}
+        {HOT_SKILLS.length > 5 && (
+          <div className="px-5 py-2.5 border-t border-orange-200/60 dark:border-orange-800/30 text-center">
+            <button
+              onClick={() => setShowAllHot(!showAllHot)}
+              className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 transition-colors"
+            >
+              {showAllHot
+                ? (isZh ? '收起' : 'Show less')
+                : (isZh ? `展开全部 ${HOT_SKILLS.length} 个热门技能` : `Show all ${HOT_SKILLS.length} trending skills`)}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Search */}

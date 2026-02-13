@@ -1916,6 +1916,9 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
   const [attachedImages, setAttachedImages] = useState([]);
   const [uploadingImages, setUploadingImages] = useState(new Map());
   const [imageErrors, setImageErrors] = useState(new Map());
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const inputContainerRef = useRef(null);
@@ -4461,6 +4464,44 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     noKeyboard: true
   });
 
+  // File upload handlers
+  const handleFileUpload = useCallback(async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append('files', file);
+      }
+
+      const res = await authenticatedFetch('/api/files/upload', {
+        method: 'POST',
+        headers: {},
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.files) {
+        setUploadedFiles(prev => [...prev, ...data.files]);
+      }
+    } catch (err) {
+      console.error('File upload failed:', err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }, []);
+
+  const removeUploadedFile = useCallback((fileId) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+    // Also delete from server
+    authenticatedFetch(`/api/files/${fileId}`, {
+      method: 'DELETE',
+    }).catch(() => {});
+  }, []);
+
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !selectedProject) return;
@@ -4470,6 +4511,15 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     const selectedThinkingMode = thinkingModes.find(mode => mode.id === thinkingMode);
     if (selectedThinkingMode && selectedThinkingMode.prefix) {
       messageContent = `${selectedThinkingMode.prefix}: ${input}`;
+    }
+
+    // Prepend uploaded file context if any files are attached
+    if (uploadedFiles.length > 0) {
+      const fileContext = uploadedFiles.map(f =>
+        `[Attached file: ${f.originalName} (${f.type}, ${(f.size / 1024).toFixed(1)}KB) - stored at: ${f.storedPath}]`
+      ).join('\n');
+      messageContent = fileContext + '\n\n' + messageContent;
+      setUploadedFiles([]); // Clear after sending
     }
 
     // Upload images first if any
@@ -4640,7 +4690,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     if (selectedProject) {
       safeLocalStorage.removeItem(`draft_input_${selectedProject.name}`);
     }
-  }, [input, isLoading, selectedProject, attachedImages, currentSessionId, selectedSession, provider, permissionMode, onSessionActive, cursorModel, claudeModel, codexModel, sendMessage, setInput, setAttachedImages, setUploadingImages, setImageErrors, setIsTextareaExpanded, textareaRef, setChatMessages, setIsLoading, setCanAbortSession, setClaudeStatus, setIsUserScrolledUp, scrollToBottom, thinkingMode]);
+  }, [input, isLoading, selectedProject, attachedImages, uploadedFiles, currentSessionId, selectedSession, provider, permissionMode, onSessionActive, cursorModel, claudeModel, codexModel, sendMessage, setInput, setAttachedImages, setUploadingImages, setImageErrors, setIsTextareaExpanded, textareaRef, setChatMessages, setIsLoading, setCanAbortSession, setClaudeStatus, setIsUserScrolledUp, scrollToBottom, thinkingMode]);
 
   const handleGrantToolPermission = useCallback((suggestion) => {
     if (!suggestion || provider !== 'claude') {
@@ -5525,7 +5575,27 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
               </div>
             </div>
           )}
-          
+
+          {/* Uploaded files preview */}
+          {uploadedFiles.length > 0 && (
+            <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex flex-wrap gap-1.5">
+                {uploadedFiles.map(file => (
+                  <span key={file.id} className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200 dark:border-blue-700">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    {file.originalName.length > 20 ? file.originalName.slice(0, 17) + '...' : file.originalName}
+                    <button
+                      onClick={() => removeUploadedFile(file.id)}
+                      className="ml-0.5 text-blue-400 hover:text-red-500 transition-colors"
+                    >
+                      x
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* File dropdown - positioned outside dropzone to avoid conflicts */}
           {showFileDropdown && filteredFiles.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 backdrop-blur-sm">
@@ -5590,7 +5660,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
               aria-hidden="true"
               className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl"
             >
-              <div className="chat-input-placeholder block w-full pl-12 pr-20 sm:pr-40 py-1.5 sm:py-4 text-transparent text-base leading-6 whitespace-pre-wrap break-words">
+              <div className="chat-input-placeholder block w-full pl-20 pr-20 sm:pr-40 py-1.5 sm:py-4 text-transparent text-base leading-6 whitespace-pre-wrap break-words">
                 {renderInputWithMentions(input)}
               </div>
             </div>
@@ -5619,7 +5689,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
               }}
               placeholder={t('input.placeholder', { provider: provider === 'cursor' ? t('messageTypes.cursor') : provider === 'codex' ? t('messageTypes.codex') : t('messageTypes.claude') })}
               disabled={isLoading}
-              className="chat-input-placeholder block w-full pl-12 pr-20 sm:pr-40 py-1.5 sm:py-4 bg-transparent rounded-2xl focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 resize-none min-h-[50px] sm:min-h-[80px] max-h-[40vh] sm:max-h-[300px] overflow-y-auto text-base leading-6 transition-all duration-200"
+              className="chat-input-placeholder block w-full pl-20 pr-20 sm:pr-40 py-1.5 sm:py-4 bg-transparent rounded-2xl focus:outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 disabled:opacity-50 resize-none min-h-[50px] sm:min-h-[80px] max-h-[40vh] sm:max-h-[300px] overflow-y-auto text-base leading-6 transition-all duration-200"
               style={{ height: '50px' }}
             />
             {/* Image upload button */}
@@ -5633,7 +5703,30 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </button>
-            
+
+            {/* File upload button (paperclip) */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.docx,.doc,.txt,.log,.json,.csv,.md,.xml,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.h,.go,.rs,.sql,.html,.css"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute left-11 top-1/2 transform -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Upload file"
+            >
+              {uploading ? (
+                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+              )}
+            </button>
+
             {/* Mic button - HIDDEN */}
             <div className="absolute right-16 sm:right-16 top-1/2 transform -translate-y-1/2" style={{ display: 'none' }}>
               <MicButton
@@ -5672,7 +5765,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
             </button>
 
             {/* Hint text inside input box at bottom - Desktop only */}
-            <div className={`absolute bottom-1 left-12 right-14 sm:right-40 text-xs text-gray-400 dark:text-gray-500 pointer-events-none hidden sm:block transition-opacity duration-200 ${
+            <div className={`absolute bottom-1 left-20 right-14 sm:right-40 text-xs text-gray-400 dark:text-gray-500 pointer-events-none hidden sm:block transition-opacity duration-200 ${
               input.trim() ? 'opacity-0' : 'opacity-100'
             }`}>
               {sendByCtrlEnter

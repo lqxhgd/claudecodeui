@@ -62,6 +62,9 @@ import codexRoutes from './routes/codex.js';
 import notificationsRoutes from './routes/notifications.js';
 import aiProvidersRoutes from './routes/ai-providers.js';
 import aiEventsRoutes from './routes/ai-events.js';
+import botWebhookRoutes from './routes/bot-webhook.js';
+import fileUploadRoutes from './routes/file-upload.js';
+import pdfConvertRoutes from './routes/pdf-convert.js';
 import { initializeDatabase } from './database/db.js';
 import { validateApiKey, authenticateToken, requireAdmin, authenticateWebSocket } from './middleware/auth.js';
 import { IS_PLATFORM } from './constants/config.js';
@@ -411,6 +414,15 @@ app.use('/api/ai-providers', authenticateToken, aiProvidersRoutes);
 
 // AI Hot Events Routes
 app.use('/api/ai-events', authenticateToken, aiEventsRoutes);
+
+// File Upload Routes (protected)
+app.use('/api/files', authenticateToken, fileUploadRoutes);
+
+// PDF Conversion Routes (protected)
+app.use('/api/convert', authenticateToken, pdfConvertRoutes);
+
+// Bot webhook - public endpoints for DingTalk/WeChat callbacks (no auth)
+app.use('/api/bot', botWebhookRoutes);
 
 // Agent API Routes (uses API key authentication)
 app.use('/api/agent', agentRoutes);
