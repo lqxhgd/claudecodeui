@@ -26,6 +26,7 @@ import MainContent from './components/MainContent';
 import MobileNav from './components/MobileNav';
 import Settings from './components/Settings';
 import QuickSettingsPanel from './components/QuickSettingsPanel';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -911,6 +912,7 @@ function AppContent() {
 
       {/* Main Content Area - Flexible */}
       <div className={`flex-1 flex flex-col min-w-0 ${isMobile && !isInputFocused ? 'pb-mobile-nav' : ''}`}>
+        <ErrorBoundary>
         <MainContent
           selectedProject={selectedProject}
           selectedSession={selectedSession}
@@ -939,6 +941,7 @@ function AppContent() {
           sendByCtrlEnter={sendByCtrlEnter}
           externalMessageUpdate={externalMessageUpdate}
         />
+        </ErrorBoundary>
       </div>
 
       {/* Mobile Bottom Navigation */}

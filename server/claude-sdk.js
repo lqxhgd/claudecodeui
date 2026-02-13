@@ -666,7 +666,8 @@ async function queryClaudeSDK(command, options = {}, ws) {
       sessionId: capturedSessionId
     });
 
-    throw error;
+    // Don't re-throw: the error is already sent to the client via claude-error.
+    // Re-throwing causes the outer catch to send a duplicate generic 'error' message.
   }
 }
 

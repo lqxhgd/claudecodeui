@@ -21,6 +21,7 @@ import AccountContent from './settings/AccountContent';
 import PermissionsContent from './settings/PermissionsContent';
 import McpServersContent from './settings/McpServersContent';
 import LanguageSelector from './LanguageSelector';
+import LoadingFallback from './LoadingFallback';
 const UserManagement = React.lazy(() => import('./settings/UserManagement'));
 const AIProvidersContent = React.lazy(() => import('./settings/AIProvidersContent'));
 const NotificationContent = React.lazy(() => import('./settings/NotificationContent'));
@@ -1953,7 +1954,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {/* AI Providers Tab */}
             {activeTab === 'ai-providers' && (
               <div className="space-y-6 md:space-y-8">
-                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                <React.Suspense fallback={<LoadingFallback />}>
                   <AIProvidersContent />
                 </React.Suspense>
               </div>
@@ -1962,7 +1963,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
               <div className="space-y-6 md:space-y-8">
-                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                <React.Suspense fallback={<LoadingFallback />}>
                   <NotificationContent />
                 </React.Suspense>
               </div>
@@ -1971,7 +1972,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {/* Users Tab (Admin only) */}
             {activeTab === 'users' && isAdmin && (
               <div className="space-y-6 md:space-y-8">
-                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                <React.Suspense fallback={<LoadingFallback />}>
                   <UserManagement />
                 </React.Suspense>
               </div>

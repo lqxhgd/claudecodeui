@@ -3290,6 +3290,14 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         !pendingViewSessionRef.current.sessionId &&
         (latestMessage.type === 'claude-error' || latestMessage.type === 'cursor-error' || latestMessage.type === 'codex-error');
 
+      // When a new session is being started (pendingViewSessionRef exists but has no sessionId yet),
+      // errors and lifecycle messages from the backend may carry a backend-generated fallback sessionId
+      // (e.g. sdk-session-xxx) that the frontend doesn't know about. We must let these through,
+      // otherwise errors are silently dropped and isLoading stays true forever (page freeze).
+      const isPendingSessionError = pendingViewSessionRef.current &&
+        !pendingViewSessionRef.current.sessionId &&
+        (lifecycleMessageTypes.has(latestMessage.type) || latestMessage.type === 'error');
+
       const handleBackgroundLifecycle = (sessionId) => {
         if (!sessionId) return;
         if (onSessionInactive) {
@@ -3303,23 +3311,26 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
       if (!shouldBypassSessionFilter) {
         if (!activeViewSessionId) {
           // No session in view; ignore session-scoped traffic.
+          // But always let through errors for sessions we're currently starting.
           if (latestMessage.sessionId && lifecycleMessageTypes.has(latestMessage.type)) {
-            handleBackgroundLifecycle(latestMessage.sessionId);
+            if (!isPendingSessionError) {
+              handleBackgroundLifecycle(latestMessage.sessionId);
+            }
           }
-          if (!isUnscopedError) {
+          if (!isUnscopedError && !isPendingSessionError) {
             return;
           }
         }
-        if (!latestMessage.sessionId && !isUnscopedError) {
+        if (!latestMessage.sessionId && !isUnscopedError && !isPendingSessionError) {
           // Drop unscoped messages to prevent cross-session bleed.
           return;
         }
-        if (latestMessage.sessionId !== activeViewSessionId) {
+        if (latestMessage.sessionId !== activeViewSessionId && !isPendingSessionError) {
           if (latestMessage.sessionId && lifecycleMessageTypes.has(latestMessage.type)) {
             handleBackgroundLifecycle(latestMessage.sessionId);
           }
           // Message is for a different session, ignore it
-          console.log('??-?,? Skipping message for different session:', latestMessage.sessionId, 'current:', activeViewSessionId);
+          console.log('Skipping message for different session:', latestMessage.sessionId, 'current:', activeViewSessionId);
           return;
         }
       }
@@ -3632,6 +3643,12 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         }
 
         case 'claude-error':
+          setIsLoading(false);
+          setCanAbortSession(false);
+          setClaudeStatus(null);
+          if (onSessionNotProcessing && (latestMessage.sessionId || currentSessionId)) {
+            onSessionNotProcessing(latestMessage.sessionId || currentSessionId);
+          }
           setChatMessages(prev => [...prev, {
             type: 'error',
             content: `Error: ${latestMessage.error}`,
@@ -3691,6 +3708,12 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         
         case 'cursor-error':
           // Show Cursor errors as error messages in chat
+          setIsLoading(false);
+          setCanAbortSession(false);
+          setClaudeStatus(null);
+          if (onSessionNotProcessing && (latestMessage.sessionId || currentSessionId)) {
+            onSessionNotProcessing(latestMessage.sessionId || currentSessionId);
+          }
           setChatMessages(prev => [...prev, {
             type: 'error',
             content: `Cursor error: ${latestMessage.error || 'Unknown error'}`,
@@ -3983,6 +4006,18 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
           setChatMessages(prev => [...prev, {
             type: 'error',
             content: latestMessage.error || 'An error occurred with Codex',
+            timestamp: new Date()
+          }]);
+          break;
+
+        case 'error':
+          // Generic error from server (e.g. outer catch in WebSocket handler)
+          setIsLoading(false);
+          setCanAbortSession(false);
+          setClaudeStatus(null);
+          setChatMessages(prev => [...prev, {
+            type: 'error',
+            content: latestMessage.error || 'An unexpected error occurred',
             timestamp: new Date()
           }]);
           break;
