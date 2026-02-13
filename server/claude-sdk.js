@@ -565,6 +565,14 @@ async function queryClaudeSDK(command, options = {}, ws) {
     };
 
     // Create SDK query instance
+    console.log('[SDK] Creating query with options:', {
+      model: sdkOptions.model,
+      cwd: sdkOptions.cwd,
+      resume: sdkOptions.resume,
+      permissionMode: sdkOptions.permissionMode,
+      gitBashPath: process.env.CLAUDE_CODE_GIT_BASH_PATH || '(not set)'
+    });
+
     const queryInstance = query({
       prompt: finalCommand,
       options: sdkOptions
@@ -575,9 +583,33 @@ async function queryClaudeSDK(command, options = {}, ws) {
       addSession(capturedSessionId, queryInstance, tempImagePaths, tempDir);
     }
 
-    // Process streaming messages
-    console.log('Starting async generator loop for session:', capturedSessionId || 'NEW');
+    // Send immediate feedback so the frontend knows the query started
+    ws.send({
+      type: 'claude-response',
+      data: { type: 'system', subtype: 'status', text: 'Connecting to Claude...' },
+      sessionId: capturedSessionId
+    });
+
+    // Process streaming messages with startup timeout
+    console.log('[SDK] Starting async generator loop for session:', capturedSessionId || 'NEW');
+    let messageCount = 0;
+    const startupTimer = setTimeout(() => {
+      if (messageCount === 0) {
+        console.error('[SDK] No messages received after 30s, sending timeout warning');
+        ws.send({
+          type: 'claude-response',
+          data: { type: 'system', subtype: 'status', text: 'Still waiting for Claude CLI response... Check if Claude CLI is authenticated (run: claude login)' },
+          sessionId: capturedSessionId
+        });
+      }
+    }, 30000);
+
     for await (const message of queryInstance) {
+      messageCount++;
+      if (messageCount === 1) {
+        clearTimeout(startupTimer);
+        console.log('[SDK] First message received from Claude');
+      }
       // Capture real session ID from SDK when first available
       if (message.session_id && !hasRealSessionId) {
         // Remove the old fallback session from tracking before switching
@@ -630,6 +662,9 @@ async function queryClaudeSDK(command, options = {}, ws) {
       }
     }
 
+    // Clean up startup timer
+    clearTimeout(startupTimer);
+
     // Clean up session on completion
     if (capturedSessionId) {
       removeSession(capturedSessionId);
@@ -639,7 +674,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
     await cleanupTempFiles(tempImagePaths, tempDir);
 
     // Send completion event
-    console.log('Streaming complete, sending claude-complete event');
+    console.log('[SDK] Streaming complete, sending claude-complete event');
     ws.send({
       type: 'claude-complete',
       sessionId: capturedSessionId,
@@ -651,6 +686,9 @@ async function queryClaudeSDK(command, options = {}, ws) {
   } catch (error) {
     console.error('SDK query error:', error);
 
+    // Clean up startup timer
+    clearTimeout(startupTimer);
+
     // Clean up session on error
     if (capturedSessionId) {
       removeSession(capturedSessionId);
@@ -659,10 +697,14 @@ async function queryClaudeSDK(command, options = {}, ws) {
     // Clean up temporary image files on error
     await cleanupTempFiles(tempImagePaths, tempDir);
 
-    // Send error to WebSocket
+    // Send error to WebSocket with more detail
+    const errorDetail = error.message || String(error);
+    console.error('[SDK] Query error detail:', errorDetail);
     ws.send({
       type: 'claude-error',
-      error: error.message,
+      error: errorDetail.includes('exited with code')
+        ? `${errorDetail}. Possible causes: Claude CLI not authenticated (run "claude login"), or git-bash not found on Windows.`
+        : errorDetail,
       sessionId: capturedSessionId
     });
 

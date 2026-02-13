@@ -5263,89 +5263,70 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
           )}
 
           <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-            {/* Provider Switcher - Branded pill with color dot */}
-            <div className="relative flex items-center">
-              <div className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none ${
-                { claude: 'bg-orange-500', cursor: 'bg-purple-500', codex: 'bg-gray-600 dark:bg-gray-300', kimi: 'bg-purple-500', qwen: 'bg-indigo-500', deepseek: 'bg-blue-500', glm: 'bg-cyan-500', doubao: 'bg-orange-500', wenxin: 'bg-blue-600' }[provider] || 'bg-gray-500'
-              }`} />
-              <select
-                value={provider}
-                onChange={(e) => {
-                  const newProvider = e.target.value;
-                  setProvider(newProvider);
-                  localStorage.setItem('selected-provider', newProvider);
-                }}
-                className="appearance-none pl-7 pr-7 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
-              >
-                <option value="claude">Claude</option>
-                <option value="cursor">Cursor</option>
-                <option value="codex">Codex</option>
-                <option disabled>───────</option>
-                <option value="kimi">Kimi</option>
-                <option value="qwen">Qwen</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="glm">GLM</option>
-                <option value="doubao">Doubao</option>
-                <option value="wenxin">Wenxin</option>
-              </select>
-              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-            </div>
-            {/* Model sub-selector - compact pill style */}
+            {/* Provider Switcher */}
+            <select
+              value={provider}
+              onChange={(e) => {
+                const newProvider = e.target.value;
+                setProvider(newProvider);
+                localStorage.setItem('selected-provider', newProvider);
+              }}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+            >
+              <option value="claude">Claude</option>
+              <option value="cursor">Cursor</option>
+              <option value="codex">Codex</option>
+              <option value="kimi">Kimi</option>
+              <option value="qwen">Qwen</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="glm">GLM</option>
+              <option value="doubao">Doubao</option>
+              <option value="wenxin">Wenxin</option>
+            </select>
+            {/* Model sub-selector */}
             {provider === 'claude' && (
-              <div className="relative flex items-center">
-                <select
-                  value={claudeModel}
-                  onChange={(e) => { setClaudeModel(e.target.value); localStorage.setItem('claude-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
-                >
-                  {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </div>
+              <select
+                value={claudeModel}
+                onChange={(e) => { setClaudeModel(e.target.value); localStorage.setItem('claude-model', e.target.value); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              >
+                {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
             )}
             {provider === 'cursor' && (
-              <div className="relative flex items-center">
-                <select
-                  value={cursorModel}
-                  onChange={(e) => { setCursorModel(e.target.value); localStorage.setItem('cursor-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
-                >
-                  {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </div>
+              <select
+                value={cursorModel}
+                onChange={(e) => { setCursorModel(e.target.value); localStorage.setItem('cursor-model', e.target.value); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              >
+                {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
             )}
             {provider === 'codex' && (
-              <div className="relative flex items-center">
-                <select
-                  value={codexModel}
-                  onChange={(e) => { setCodexModel(e.target.value); localStorage.setItem('codex-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
-                >
-                  {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </div>
+              <select
+                value={codexModel}
+                onChange={(e) => { setCodexModel(e.target.value); localStorage.setItem('codex-model', e.target.value); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              >
+                {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
             )}
             {['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) && (
-              <div className="relative flex items-center">
-                <select
-                  value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
-                  onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
-                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
-                >
-                  {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-              </div>
+              <select
+                value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
+                onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
+              >
+                {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
             )}
             <button
               type="button"
