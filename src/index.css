@@ -564,12 +564,6 @@
       -webkit-touch-callout: default !important;
     }
     
-    /* Fix mobile scrolling */
-    .overflow-y-auto {
-      touch-action: pan-y;
-      -webkit-overflow-scrolling: touch;
-    }
-    
     .chat-message {
       touch-action: pan-y;
     }
@@ -730,19 +724,6 @@
 
 /* Custom spinner animation for mobile compatibility */
 @layer utilities {
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  .animate-spin {
-    animation: spin 1s linear infinite;
-  }
-  
   /* Force hardware acceleration for smoother animation on mobile */
   .loading-spinner {
     animation: spin 1s linear infinite;

@@ -1068,8 +1068,6 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {/* Appearance Tab */}
             {activeTab === 'appearance' && (
               <div className="space-y-6 md:space-y-8">
-               {activeTab === 'appearance' && (
-  <div className="space-y-6 md:space-y-8">
     {/* Theme Settings */}
     <div className="space-y-4">
       <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
@@ -1286,9 +1284,6 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
         </div>
       </div>
     </div>
-  </div>
-)}
-
               </div>
             )}
 
