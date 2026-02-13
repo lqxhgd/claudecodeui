@@ -26,22 +26,55 @@ const buildWebSocketUrl = (token: string | null) => {
   return `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`; // OSS mode: Use same host:port that served the page
 };
 
+const HEARTBEAT_INTERVAL_MS = 30000; // 30 seconds
+const CONNECTION_TIMEOUT_MS = 10000; // 10 seconds
+const RECONNECT_BASE_DELAY_MS = 3000; // 3 seconds initial
+const RECONNECT_MAX_DELAY_MS = 30000; // 30 seconds max
+
 const useWebSocketProviderState = (): WebSocketContextType => {
   const wsRef = useRef<WebSocket | null>(null);
   const unmountedRef = useRef(false); // Track if component is unmounted
   const [latestMessage, setLatestMessage] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const connectionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptRef = useRef(0);
   const { token } = useAuth();
+
+  const clearHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+  }, []);
+
+  const clearConnectionTimeout = useCallback(() => {
+    if (connectionTimeoutRef.current) {
+      clearTimeout(connectionTimeoutRef.current);
+      connectionTimeoutRef.current = null;
+    }
+  }, []);
+
+  const startHeartbeat = useCallback((websocket: WebSocket) => {
+    clearHeartbeat();
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (websocket.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, HEARTBEAT_INTERVAL_MS);
+  }, [clearHeartbeat]);
 
   useEffect(() => {
     connect();
-    
+
     return () => {
       unmountedRef.current = true;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      clearHeartbeat();
+      clearConnectionTimeout();
       if (wsRef.current) {
         wsRef.current.close();
       }
@@ -55,17 +88,31 @@ const useWebSocketProviderState = (): WebSocketContextType => {
       const wsUrl = buildWebSocketUrl(token);
 
       if (!wsUrl) return console.warn('No authentication token found for WebSocket connection');
-      
+
       const websocket = new WebSocket(wsUrl);
 
+      // Connection timeout: if WebSocket stays in CONNECTING for more than 10 seconds, close and retry
+      clearConnectionTimeout();
+      connectionTimeoutRef.current = setTimeout(() => {
+        if (websocket.readyState === WebSocket.CONNECTING) {
+          console.warn('WebSocket connection timeout after 10s, closing and retrying...');
+          websocket.close();
+        }
+      }, CONNECTION_TIMEOUT_MS);
+
       websocket.onopen = () => {
+        clearConnectionTimeout();
+        reconnectAttemptRef.current = 0; // Reset backoff on successful connection
         setIsConnected(true);
         wsRef.current = websocket;
+        startHeartbeat(websocket);
       };
 
       websocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          // Ignore pong messages - they are just heartbeat responses
+          if (data.type === 'pong') return;
           setLatestMessage(data);
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -73,14 +120,22 @@ const useWebSocketProviderState = (): WebSocketContextType => {
       };
 
       websocket.onclose = () => {
+        clearConnectionTimeout();
+        clearHeartbeat();
         setIsConnected(false);
         wsRef.current = null;
-        
-        // Attempt to reconnect after 3 seconds
+
+        // Exponential backoff: 3s -> 6s -> 12s -> 24s -> 30s (capped)
+        const delay = Math.min(
+          RECONNECT_BASE_DELAY_MS * Math.pow(2, reconnectAttemptRef.current),
+          RECONNECT_MAX_DELAY_MS
+        );
+        reconnectAttemptRef.current += 1;
+
         reconnectTimeoutRef.current = setTimeout(() => {
           if (unmountedRef.current) return; // Prevent reconnection if unmounted
           connect();
-        }, 3000);
+        }, delay);
       };
 
       websocket.onerror = (error) => {
@@ -90,7 +145,7 @@ const useWebSocketProviderState = (): WebSocketContextType => {
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
     }
-  }, [token]); // everytime token changes, we reconnect
+  }, [token, clearHeartbeat, clearConnectionTimeout, startHeartbeat]); // everytime token changes, we reconnect
 
   const sendMessage = useCallback((message: any) => {
     const socket = wsRef.current;

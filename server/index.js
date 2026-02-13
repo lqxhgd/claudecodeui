@@ -68,6 +68,17 @@ import { queryOpenAICompatible, abortOpenAICompatibleSession, isOpenAICompatible
 import { queryWenxin, abortWenxinSession, isWenxinSessionActive } from './providers/wenxin-sdk.js';
 import { getProviderConfig } from './providers/registry.js';
 
+// Global error handlers for server stability
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[ERROR] Unhandled Promise Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('[FATAL] Uncaught Exception:', error);
+  // Give time to flush logs before exit
+  setTimeout(() => process.exit(1), 1000);
+});
+
 // File system watcher for projects folder
 let projectsWatcher = null;
 // Map<userId, Set<WebSocket>> - per-user WebSocket connections
@@ -962,6 +973,14 @@ function handleChatConnection(ws) {
         try {
             const data = JSON.parse(message);
 
+            if (data.type === 'ping') {
+                // Respond to heartbeat ping from client
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'pong' }));
+                }
+                return;
+            }
+
             if (data.type === 'claude-command') {
                 console.log('[DEBUG] User message:', data.command || '[Continue/Resume]');
                 console.log('📁 Project:', data.options?.projectPath || 'Unknown');
@@ -996,7 +1015,10 @@ function handleChatConnection(ws) {
                 if (!providerConfig) {
                     writer.send({ type: 'error', error: `Unknown provider: ${providerId}` });
                 } else {
-                    const options = { ...data.options, provider: providerId, userId };
+                    // Ensure a sessionId is always present so providers can include it in
+                    // all WebSocket messages. Without this, the frontend drops messages
+                    // with no sessionId and the page freezes (isLoading never becomes false).
+                    const options = { ...data.options, provider: providerId, userId, sessionId: data.options?.sessionId || `ai-${Date.now()}` };
                     if (providerConfig.type === 'openai-compatible') {
                         await queryOpenAICompatible(data.command, options, writer);
                     } else if (providerConfig.type === 'wenxin') {

@@ -4971,235 +4971,18 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
         ) : chatMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             {!selectedSession && !currentSessionId && (
-              <div className="text-center px-6 sm:px-4 py-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{t('providerSelection.title')}</h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-8">
+              <div className="text-center px-6 sm:px-4 py-12">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('providerSelection.title')}</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm max-w-md mx-auto">
                   {t('providerSelection.description')}
                 </p>
-                
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                  {/* Claude Button */}
-                  <button
-                    onClick={() => {
-                      setProvider('claude');
-                      localStorage.setItem('selected-provider', 'claude');
-                      // Focus input after selection
-                      setTimeout(() => textareaRef.current?.focus(), 100);
-                    }}
-                    className={`group relative w-64 h-32 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-xl ${
-                      provider === 'claude' 
-                        ? 'border-blue-500 shadow-lg ring-2 ring-blue-500/20' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-blue-400'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center h-full gap-3">
-                      <ClaudeLogo className="w-10 h-10" />
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Claude Code</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('providerSelection.providerInfo.anthropic')}</p>
-                      </div>
-                    </div>
-                    {provider === 'claude' && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                  
-                  {/* Cursor Button */}
-                  <button
-                    onClick={() => {
-                      setProvider('cursor');
-                      localStorage.setItem('selected-provider', 'cursor');
-                      // Focus input after selection
-                      setTimeout(() => textareaRef.current?.focus(), 100);
-                    }}
-                    className={`group relative w-64 h-32 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-xl ${
-                      provider === 'cursor' 
-                        ? 'border-purple-500 shadow-lg ring-2 ring-purple-500/20' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-purple-400'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center h-full gap-3">
-                      <CursorLogo className="w-10 h-10" />
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Cursor</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('providerSelection.providerInfo.cursorEditor')}</p>
-                      </div>
-                    </div>
-                    {provider === 'cursor' && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Codex Button */}
-                  <button
-                    onClick={() => {
-                      setProvider('codex');
-                      localStorage.setItem('selected-provider', 'codex');
-                      // Focus input after selection
-                      setTimeout(() => textareaRef.current?.focus(), 100);
-                    }}
-                    className={`group relative w-64 h-32 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-xl ${
-                      provider === 'codex'
-                        ? 'border-gray-800 dark:border-gray-300 shadow-lg ring-2 ring-gray-800/20 dark:ring-gray-300/20'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-400'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center h-full gap-3">
-                      <CodexLogo className="w-10 h-10" />
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">Codex</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('providerSelection.providerInfo.openai')}</p>
-                      </div>
-                    </div>
-                    {provider === 'codex' && (
-                      <div className="absolute top-2 right-2">
-                        <div className="w-5 h-5 bg-gray-800 dark:bg-gray-300 rounded-full flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white dark:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                </div>
-
-                {/* Chinese AI Models Section */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 text-center">{t('providerSelection.chineseModels', 'Chinese AI Models')}</p>
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    {[
-                      { id: 'kimi', label: 'Kimi', Logo: KimiLogo, color: 'purple' },
-                      { id: 'qwen', label: '通义千问', Logo: QwenLogo, color: 'indigo' },
-                      { id: 'deepseek', label: 'DeepSeek', Logo: DeepSeekLogo, color: 'blue' },
-                      { id: 'glm', label: '智谱GLM', Logo: GLMLogo, color: 'sky' },
-                      { id: 'doubao', label: '豆包', Logo: DoubaoLogo, color: 'orange' },
-                      { id: 'wenxin', label: '文心一言', Logo: WenxinLogo, color: 'blue' }
-                    ].map(({ id, label, Logo, color }) => (
-                      <button
-                        key={id}
-                        onClick={() => {
-                          setProvider(id);
-                          localStorage.setItem('selected-provider', id);
-                          setTimeout(() => textareaRef.current?.focus(), 100);
-                        }}
-                        className={`group relative w-36 h-24 bg-white dark:bg-gray-800 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
-                          provider === id
-                            ? `border-${color}-500 shadow-lg ring-2 ring-${color}-500/20`
-                            : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'
-                        }`}
-                      >
-                        <div className="flex flex-col items-center justify-center h-full gap-2">
-                          <Logo className="w-8 h-8" />
-                          <p className="font-medium text-sm text-gray-900 dark:text-white">{label}</p>
-                        </div>
-                        {provider === id && (
-                          <div className="absolute top-1.5 right-1.5">
-                            <div className={`w-4 h-4 bg-${color}-500 rounded-full flex items-center justify-center`}>
-                              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Model Selection - Always reserve space to prevent jumping */}
-                <div className={`mb-6 transition-opacity duration-200 ${provider ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('providerSelection.selectModel')}
-                  </label>
-                  {provider === 'claude' ? (
-                    <select
-                      value={claudeModel}
-                      onChange={(e) => {
-                        const newModel = e.target.value;
-                        setClaudeModel(newModel);
-                        localStorage.setItem('claude-model', newModel);
-                      }}
-                      className="pl-4 pr-10 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-w-[140px]"
-                    >
-                      {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  ) : provider === 'codex' ? (
-                    <select
-                      value={codexModel}
-                      onChange={(e) => {
-                        const newModel = e.target.value;
-                        setCodexModel(newModel);
-                        localStorage.setItem('codex-model', newModel);
-                      }}
-                      className="pl-4 pr-10 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 min-w-[140px]"
-                    >
-                      {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  ) : ['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) ? (
-                    <select
-                      value={safeLocalStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
-                      onChange={(e) => {
-                        safeLocalStorage.setItem(`${provider}-model`, e.target.value);
-                      }}
-                      className="pl-4 pr-10 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[140px]"
-                    >
-                      {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <select
-                      value={cursorModel}
-                      onChange={(e) => {
-                        const newModel = e.target.value;
-                        setCursorModel(newModel);
-                        localStorage.setItem('cursor-model', newModel);
-                      }}
-                      className="pl-4 pr-10 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 min-w-[140px]"
-                      disabled={provider !== 'cursor'}
-                    >
-                      {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {provider === 'claude'
-                    ? t('providerSelection.readyPrompt.claude', { model: claudeModel })
-                    : provider === 'cursor'
-                    ? t('providerSelection.readyPrompt.cursor', { model: cursorModel })
-                    : provider === 'codex'
-                    ? t('providerSelection.readyPrompt.codex', { model: codexModel })
-                    : ['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider)
-                    ? t('providerSelection.readyPrompt.chinese', {
-                        provider: provider,
-                        model: safeLocalStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')
-                      })
-                    : t('providerSelection.readyPrompt.default')
-                  }
-                </p>
-                
-                {/* Show NextTaskBanner when provider is selected and ready, only if TaskMaster is installed */}
                 {provider && tasksEnabled && isTaskMasterInstalled && (
-                  <div className="mt-4 px-4 sm:px-0">
+                  <div className="mt-6 px-4 sm:px-0">
                     <NextTaskBanner
                       onStartTask={() => setInput('Start the next task')}
                       onShowAllTasks={onShowAllTasks}
@@ -5431,9 +5214,12 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-3">
-            {/* Provider & Model Switcher */}
+          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            {/* Provider Switcher - Branded pill with color dot */}
             <div className="relative flex items-center">
+              <div className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full pointer-events-none ${
+                { claude: 'bg-orange-500', cursor: 'bg-purple-500', codex: 'bg-gray-600 dark:bg-gray-300', kimi: 'bg-purple-500', qwen: 'bg-indigo-500', deepseek: 'bg-blue-500', glm: 'bg-cyan-500', doubao: 'bg-orange-500', wenxin: 'bg-blue-600' }[provider] || 'bg-gray-500'
+              }`} />
               <select
                 value={provider}
                 onChange={(e) => {
@@ -5441,33 +5227,37 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                   setProvider(newProvider);
                   localStorage.setItem('selected-provider', newProvider);
                 }}
-                className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-sm font-medium border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all duration-200"
+                className="appearance-none pl-7 pr-7 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-750 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
               >
-                <option value="claude">Claude</option>
-                <option value="cursor">Cursor</option>
-                <option value="codex">Codex</option>
-                <option value="kimi">Kimi</option>
-                <option value="qwen">Qwen</option>
-                <option value="deepseek">DeepSeek</option>
-                <option value="glm">GLM</option>
-                <option value="doubao">Doubao</option>
-                <option value="wenxin">Wenxin</option>
+                <optgroup label="CLI Providers">
+                  <option value="claude">Claude</option>
+                  <option value="cursor">Cursor</option>
+                  <option value="codex">Codex</option>
+                </optgroup>
+                <optgroup label="Chinese AI">
+                  <option value="kimi">Kimi</option>
+                  <option value="qwen">Qwen</option>
+                  <option value="deepseek">DeepSeek</option>
+                  <option value="glm">GLM</option>
+                  <option value="doubao">Doubao</option>
+                  <option value="wenxin">Wenxin</option>
+                </optgroup>
               </select>
-              <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>
-            {/* Model sub-selector for providers with multiple models */}
+            {/* Model sub-selector - compact pill style */}
             {provider === 'claude' && (
               <div className="relative flex items-center">
                 <select
                   value={claudeModel}
                   onChange={(e) => { setClaudeModel(e.target.value); localStorage.setItem('claude-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all duration-200"
+                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
                 >
                   {CLAUDE_MODELS.OPTIONS.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             )}
             {provider === 'cursor' && (
@@ -5475,13 +5265,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 <select
                   value={cursorModel}
                   onChange={(e) => { setCursorModel(e.target.value); localStorage.setItem('cursor-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all duration-200"
+                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
                 >
                   {CURSOR_MODELS.OPTIONS.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             )}
             {provider === 'codex' && (
@@ -5489,13 +5279,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 <select
                   value={codexModel}
                   onChange={(e) => { setCodexModel(e.target.value); localStorage.setItem('codex-model', e.target.value); }}
-                  className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all duration-200"
+                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
                 >
                   {CODEX_MODELS.OPTIONS.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             )}
             {['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) && (
@@ -5503,13 +5293,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                 <select
                   value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
                   onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
-                  className="appearance-none pl-3 pr-7 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer transition-all duration-200"
+                  className="appearance-none pl-3 pr-6 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
                 >
                   {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
               </div>
             )}
             <button

@@ -68,9 +68,21 @@ class OpenAICompatibleProvider extends BaseProvider {
     const providerId = options.provider;
     const config = getProviderConfig(providerId);
 
+    // Generate a sessionId early so ALL messages (including errors) include it.
+    // Without this, the frontend drops messages with no sessionId and the page freezes.
+    const sessionId = options.sessionId || `${providerId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     if (!config || config.type !== 'openai-compatible') {
       ws.send(JSON.stringify({
         type: 'error',
+        sessionId,
+        error: `Invalid OpenAI-compatible provider: ${providerId}`
+      }));
+      // Send completion so frontend knows the session ended
+      ws.send(JSON.stringify({
+        type: 'claude-complete',
+        sessionId,
+        provider: providerId,
         error: `Invalid OpenAI-compatible provider: ${providerId}`
       }));
       return;
@@ -80,13 +92,20 @@ class OpenAICompatibleProvider extends BaseProvider {
     if (!apiKey) {
       ws.send(JSON.stringify({
         type: 'error',
+        sessionId,
         error: `No API key configured for ${config.label}. Please add your API key in Settings → AI Providers.`
+      }));
+      // Send completion so frontend knows the session ended
+      ws.send(JSON.stringify({
+        type: 'claude-complete',
+        sessionId,
+        provider: providerId,
+        error: `No API key configured for ${config.label}.`
       }));
       return;
     }
 
     const model = options.model || this.getDefaultModel(providerId);
-    const sessionId = options.sessionId || `${providerId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     // Create AbortController for cancellation support
     const controller = new AbortController();

@@ -88,16 +88,27 @@ class WenxinProvider extends BaseProvider {
   async query(command, options, ws) {
     const { apiKey, secretKey } = this.resolveCredentials(options.userId);
 
+    // Generate a sessionId early so ALL messages (including errors) include it.
+    // Without this, the frontend drops messages with no sessionId and the page freezes.
+    const sessionId = options.sessionId || `wenxin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
     if (!apiKey || !secretKey) {
       ws.send(JSON.stringify({
         type: 'error',
+        sessionId,
         error: 'Wenxin API requires both API Key and Secret Key. Please configure them in Settings → AI Providers.'
+      }));
+      // Send completion so frontend knows the session ended
+      ws.send(JSON.stringify({
+        type: 'claude-complete',
+        sessionId,
+        provider: 'wenxin',
+        error: 'Wenxin API requires both API Key and Secret Key.'
       }));
       return;
     }
 
     const model = options.model || 'ernie-4.0-8k';
-    const sessionId = options.sessionId || `wenxin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const controller = new AbortController();
     this.addSession(sessionId, { controller });
 

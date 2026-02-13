@@ -469,7 +469,11 @@ async function loadMcpConfig(cwd) {
  */
 async function queryClaudeSDK(command, options = {}, ws) {
   const { sessionId } = options;
-  let capturedSessionId = sessionId;
+  // Ensure we always have a sessionId, even for brand-new sessions where the SDK
+  // hasn't returned a session_id yet. Without this, messages are sent with
+  // sessionId: null and the frontend drops them, causing the page to freeze.
+  let capturedSessionId = sessionId || `sdk-session-${Date.now()}`;
+  let hasRealSessionId = !!sessionId; // Track whether we have the real SDK session ID
   let sessionCreatedSent = false;
   let tempImagePaths = [];
   let tempDir = null;
@@ -519,7 +523,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
         requestId,
         toolName,
         input,
-        sessionId: capturedSessionId || sessionId || null
+        sessionId: capturedSessionId
       });
 
       // Wait for the UI; if the SDK cancels, notify the UI so it can dismiss the banner.
@@ -531,7 +535,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
             type: 'claude-permission-cancelled',
             requestId,
             reason,
-            sessionId: capturedSessionId || sessionId || null
+            sessionId: capturedSessionId
           });
         }
       });
@@ -574,10 +578,15 @@ async function queryClaudeSDK(command, options = {}, ws) {
     // Process streaming messages
     console.log('Starting async generator loop for session:', capturedSessionId || 'NEW');
     for await (const message of queryInstance) {
-      // Capture session ID from first message
-      if (message.session_id && !capturedSessionId) {
-
+      // Capture real session ID from SDK when first available
+      if (message.session_id && !hasRealSessionId) {
+        // Remove the old fallback session from tracking before switching
+        const oldSessionId = capturedSessionId;
         capturedSessionId = message.session_id;
+        hasRealSessionId = true;
+
+        // Replace the fallback session entry with the real one
+        removeSession(oldSessionId);
         addSession(capturedSessionId, queryInstance, tempImagePaths, tempDir);
 
         // Set session ID on writer
@@ -604,7 +613,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
       ws.send({
         type: 'claude-response',
         data: transformedMessage,
-        sessionId: capturedSessionId || sessionId || null
+        sessionId: capturedSessionId
       });
 
       // Extract and send token budget updates from result messages
@@ -615,7 +624,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
           ws.send({
             type: 'token-budget',
             data: tokenBudget,
-            sessionId: capturedSessionId || sessionId || null
+            sessionId: capturedSessionId
           });
         }
       }
@@ -654,7 +663,7 @@ async function queryClaudeSDK(command, options = {}, ws) {
     ws.send({
       type: 'claude-error',
       error: error.message,
-      sessionId: capturedSessionId || sessionId || null
+      sessionId: capturedSessionId
     });
 
     throw error;
