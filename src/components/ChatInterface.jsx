@@ -5275,21 +5275,18 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
                   setProvider(newProvider);
                   localStorage.setItem('selected-provider', newProvider);
                 }}
-                className="appearance-none pl-7 pr-7 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-750 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
+                className="appearance-none pl-7 pr-7 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer transition-all duration-200"
               >
-                <optgroup label="CLI Providers">
-                  <option value="claude">Claude</option>
-                  <option value="cursor">Cursor</option>
-                  <option value="codex">Codex</option>
-                </optgroup>
-                <optgroup label="Chinese AI">
-                  <option value="kimi">Kimi</option>
-                  <option value="qwen">Qwen</option>
-                  <option value="deepseek">DeepSeek</option>
-                  <option value="glm">GLM</option>
-                  <option value="doubao">Doubao</option>
-                  <option value="wenxin">Wenxin</option>
-                </optgroup>
+                <option value="claude">Claude</option>
+                <option value="cursor">Cursor</option>
+                <option value="codex">Codex</option>
+                <option disabled>───────</option>
+                <option value="kimi">Kimi</option>
+                <option value="qwen">Qwen</option>
+                <option value="deepseek">DeepSeek</option>
+                <option value="glm">GLM</option>
+                <option value="doubao">Doubao</option>
+                <option value="wenxin">Wenxin</option>
               </select>
               <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>

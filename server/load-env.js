@@ -22,3 +22,23 @@ try {
 } catch (e) {
   console.log('No .env file found or error reading it:', e.message);
 }
+
+// Auto-detect git-bash path on Windows for Claude CLI compatibility
+if (process.platform === 'win32' && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+  const possiblePaths = [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'D:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Git\\bin\\bash.exe',
+    path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Git', 'bin', 'bash.exe'),
+  ];
+  for (const p of possiblePaths) {
+    try {
+      fs.accessSync(p, fs.constants.X_OK);
+      process.env.CLAUDE_CODE_GIT_BASH_PATH = p;
+      console.log(`[INFO] Auto-detected git-bash: ${p}`);
+      break;
+    } catch {
+      // Not found at this path, try next
+    }
+  }
+}
