@@ -24,11 +24,26 @@ export default defineConfig(({ command, mode }) => {
     },
     build: {
       outDir: 'dist',
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 1500,
       rollupOptions: {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-markdown': [
+              'react-markdown',
+              'remark-gfm',
+              'remark-math',
+              'rehype-katex',
+              'katex',
+              'react-syntax-highlighter'
+            ],
+            'vendor-ui': [
+              'lucide-react',
+              'react-i18next',
+              'i18next',
+              'i18next-browser-languagedetector',
+              'fuse.js'
+            ],
             'vendor-codemirror': [
               '@uiw/react-codemirror',
               '@codemirror/lang-css',

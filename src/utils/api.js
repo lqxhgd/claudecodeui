@@ -24,6 +24,20 @@ export const authenticatedFetch = (url, options = {}) => {
   });
 };
 
+// Helper that checks response.ok, parses JSON, and throws structured errors
+export const apiRequest = async (url, options = {}) => {
+  const response = await authenticatedFetch(url, options);
+  if (!response.ok) {
+    let errorMessage = `Request failed: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
+  }
+  return response.json();
+};
+
 // API endpoints
 export const api = {
   // Auth endpoints (no token required)
@@ -186,57 +200,51 @@ export const api = {
 
 // AI Providers API
 export const aiProvidersApi = {
-  list: () => authenticatedFetch('/api/ai-providers'),
-  getModels: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/models`),
-  saveApiKey: (providerId, data) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key`, {
+  list: () => apiRequest('/api/ai-providers'),
+  getModels: (providerId) => apiRequest(`/api/ai-providers/${providerId}/models`),
+  saveApiKey: (providerId, data) => apiRequest(`/api/ai-providers/${providerId}/api-key`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   }),
-  deleteApiKey: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key`, {
+  deleteApiKey: (providerId) => apiRequest(`/api/ai-providers/${providerId}/api-key`, {
     method: 'DELETE'
   }),
-  getApiKeyStatus: (providerId) => authenticatedFetch(`/api/ai-providers/${providerId}/api-key/status`)
+  getApiKeyStatus: (providerId) => apiRequest(`/api/ai-providers/${providerId}/api-key/status`)
 };
 
 // Notifications API
 export const notificationsApi = {
-  getConfig: () => authenticatedFetch('/api/notifications/config'),
-  saveConfig: (data) => authenticatedFetch('/api/notifications/config', {
+  getConfig: () => apiRequest('/api/notifications/config'),
+  saveConfig: (data) => apiRequest('/api/notifications/config', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   }),
-  updateConfig: (id, data) => authenticatedFetch(`/api/notifications/config/${id}`, {
+  updateConfig: (id, data) => apiRequest(`/api/notifications/config/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   }),
-  deleteConfig: (id) => authenticatedFetch(`/api/notifications/config/${id}`, {
+  deleteConfig: (id) => apiRequest(`/api/notifications/config/${id}`, {
     method: 'DELETE'
   }),
-  sendTest: (configId) => authenticatedFetch('/api/notifications/test', {
+  sendTest: (configId) => apiRequest('/api/notifications/test', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ configId })
   }),
-  getLogs: (limit = 50, offset = 0) => authenticatedFetch(`/api/notifications/log?limit=${limit}&offset=${offset}`)
+  getLogs: (limit = 50, offset = 0) => apiRequest(`/api/notifications/log?limit=${limit}&offset=${offset}`)
 };
 
 // User Management API (admin)
 export const usersApi = {
-  list: () => authenticatedFetch('/api/auth/users'),
-  invite: (data) => authenticatedFetch('/api/auth/invite', {
+  list: () => apiRequest('/api/auth/users'),
+  invite: (data) => apiRequest('/api/auth/invite', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   }),
-  deactivate: (userId) => authenticatedFetch(`/api/auth/users/${userId}`, {
+  deactivate: (userId) => apiRequest(`/api/auth/users/${userId}`, {
     method: 'DELETE'
   }),
-  updateRole: (userId, role) => authenticatedFetch(`/api/auth/users/${userId}/role`, {
+  updateRole: (userId, role) => apiRequest(`/api/auth/users/${userId}/role`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ role })
   })
 };

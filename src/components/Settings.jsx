@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -21,9 +21,9 @@ import AccountContent from './settings/AccountContent';
 import PermissionsContent from './settings/PermissionsContent';
 import McpServersContent from './settings/McpServersContent';
 import LanguageSelector from './LanguageSelector';
-import UserManagement from './settings/UserManagement';
-import AIProvidersContent from './settings/AIProvidersContent';
-import NotificationContent from './settings/NotificationContent';
+const UserManagement = React.lazy(() => import('./settings/UserManagement'));
+const AIProvidersContent = React.lazy(() => import('./settings/AIProvidersContent'));
+const NotificationContent = React.lazy(() => import('./settings/NotificationContent'));
 
 function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
@@ -1953,21 +1953,27 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
             {/* AI Providers Tab */}
             {activeTab === 'ai-providers' && (
               <div className="space-y-6 md:space-y-8">
-                <AIProvidersContent />
+                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                  <AIProvidersContent />
+                </React.Suspense>
               </div>
             )}
 
             {/* Notifications Tab */}
             {activeTab === 'notifications' && (
               <div className="space-y-6 md:space-y-8">
-                <NotificationContent />
+                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                  <NotificationContent />
+                </React.Suspense>
               </div>
             )}
 
             {/* Users Tab (Admin only) */}
             {activeTab === 'users' && isAdmin && (
               <div className="space-y-6 md:space-y-8">
-                <UserManagement />
+                <React.Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-6 h-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" /></div>}>
+                  <UserManagement />
+                </React.Suspense>
               </div>
             )}
           </div>

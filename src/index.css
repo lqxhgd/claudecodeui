@@ -701,6 +701,26 @@
   }
 }
 
+/* Provider switcher gradient for dark mode */
+.dark select optgroup {
+  background: #1f2937;
+  color: #d1d5db;
+}
+
+/* Smooth focus glow for the chat input */
+.chat-input-glow:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dark .chat-input-glow:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth transitions for interactive elements */
+.transition-smooth {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Hide markdown backticks in prose content */
 .prose code::before,
 .prose code::after {
