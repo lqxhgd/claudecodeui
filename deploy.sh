@@ -73,13 +73,12 @@ fi
 if ! grep -q "ANTHROPIC_API_KEY=sk-" .env 2>/dev/null; then
     echo ""
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}You need an Anthropic API key to use Claude.${NC}"
-    echo -e "${CYAN}Get one at: https://console.anthropic.com/settings/keys${NC}"
+    echo -e "${CYAN}Claude Code CLI 需要 API Key 和 API URL 来连接 Claude。${NC}"
+    echo -e "${CYAN}You need an API key and optionally a custom API URL.${NC}"
     echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    read -p "Enter your ANTHROPIC_API_KEY (sk-ant-...): " API_KEY
+    read -p "Enter your ANTHROPIC_API_KEY: " API_KEY
     if [ -n "$API_KEY" ]; then
-        # Add or update ANTHROPIC_API_KEY in .env
         if grep -q "ANTHROPIC_API_KEY" .env; then
             sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$API_KEY|" .env
         else
@@ -88,6 +87,16 @@ if ! grep -q "ANTHROPIC_API_KEY=sk-" .env 2>/dev/null; then
         echo -e "${GREEN}API key configured${NC}"
     else
         echo -e "${RED}Warning: No API key provided. Claude features will not work.${NC}"
+    fi
+    echo ""
+    read -p "Enter custom API URL (leave empty for default, or enter your URL): " API_URL
+    if [ -n "$API_URL" ]; then
+        if grep -q "ANTHROPIC_BASE_URL" .env; then
+            sed -i "s|ANTHROPIC_BASE_URL=.*|ANTHROPIC_BASE_URL=$API_URL|" .env
+        else
+            echo "ANTHROPIC_BASE_URL=$API_URL" >> .env
+        fi
+        echo -e "${GREEN}Custom API URL configured: $API_URL${NC}"
     fi
 fi
 
