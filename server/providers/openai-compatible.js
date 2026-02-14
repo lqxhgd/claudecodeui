@@ -73,35 +73,35 @@ class OpenAICompatibleProvider extends BaseProvider {
     const sessionId = options.sessionId || `${providerId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     if (!config || config.type !== 'openai-compatible') {
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'error',
         sessionId,
         error: `Invalid OpenAI-compatible provider: ${providerId}`
-      }));
+      });
       // Send completion so frontend knows the session ended
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'claude-complete',
         sessionId,
         provider: providerId,
         error: `Invalid OpenAI-compatible provider: ${providerId}`
-      }));
+      });
       return;
     }
 
     const apiKey = this.resolveApiKey(providerId, options.userId);
     if (!apiKey) {
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'error',
         sessionId,
         error: `No API key configured for ${config.label}. Please add your API key in Settings → AI Providers.`
-      }));
+      });
       // Send completion so frontend knows the session ended
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'claude-complete',
         sessionId,
         provider: providerId,
         error: `No API key configured for ${config.label}.`
-      }));
+      });
       return;
     }
 
@@ -112,13 +112,13 @@ class OpenAICompatibleProvider extends BaseProvider {
     this.addSession(sessionId, { controller, providerId, userId: options.userId });
 
     // Notify frontend of session creation
-    ws.send(JSON.stringify({
+    ws.send({
       type: 'session-created',
       sessionId,
       model,
       provider: providerId,
       cwd: options.cwd || ''
-    }));
+    });
 
     try {
       const messages = this.buildMessages(command, options);
@@ -185,7 +185,8 @@ class OpenAICompatibleProvider extends BaseProvider {
               fullContent += delta.content;
 
               // Send in the same format the frontend expects
-              ws.send(JSON.stringify({
+              // NOTE: ws is a WebSocketWriter that already JSON.stringifies, so pass objects directly
+              ws.send({
                 type: 'claude-response',
                 sessionId,
                 data: {
@@ -195,12 +196,12 @@ class OpenAICompatibleProvider extends BaseProvider {
                     text: delta.content
                   }
                 }
-              }));
+              });
             }
 
             // Handle reasoning/thinking content if present (DeepSeek, GLM)
             if (delta?.reasoning_content) {
-              ws.send(JSON.stringify({
+              ws.send({
                 type: 'claude-response',
                 sessionId,
                 data: {
@@ -210,23 +211,23 @@ class OpenAICompatibleProvider extends BaseProvider {
                     thinking: delta.reasoning_content
                   }
                 }
-              }));
+              });
             }
 
             // Check for finish_reason
             if (data.choices?.[0]?.finish_reason) {
               // Send content block stop
-              ws.send(JSON.stringify({
+              ws.send({
                 type: 'claude-response',
                 sessionId,
                 data: {
                   type: 'content_block_stop'
                 }
-              }));
+              });
 
               // Send usage info if available
               if (data.usage) {
-                ws.send(JSON.stringify({
+                ws.send({
                   type: 'claude-response',
                   sessionId,
                   data: {
@@ -237,7 +238,7 @@ class OpenAICompatibleProvider extends BaseProvider {
                       total_tokens: data.usage.total_tokens || 0
                     }
                   }
-                }));
+                });
               }
             }
           } catch (parseError) {
@@ -248,7 +249,7 @@ class OpenAICompatibleProvider extends BaseProvider {
       }
 
       // Send completion signal
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'claude-complete',
         sessionId,
         provider: providerId,
@@ -257,30 +258,30 @@ class OpenAICompatibleProvider extends BaseProvider {
           model,
           provider: providerId
         }
-      }));
+      });
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        ws.send(JSON.stringify({
+        ws.send({
           type: 'session-aborted',
           sessionId,
           provider: providerId,
           success: true
-        }));
+        });
       } else {
         console.error(`[${providerId}] Query error:`, error.message);
-        ws.send(JSON.stringify({
+        ws.send({
           type: 'error',
           sessionId,
           error: error.message
-        }));
+        });
         // Also send completion so frontend knows the session ended
-        ws.send(JSON.stringify({
+        ws.send({
           type: 'claude-complete',
           sessionId,
           provider: providerId,
           error: error.message
-        }));
+        });
       }
     } finally {
       this.removeSession(sessionId);

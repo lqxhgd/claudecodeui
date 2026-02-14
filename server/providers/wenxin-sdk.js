@@ -93,18 +93,18 @@ class WenxinProvider extends BaseProvider {
     const sessionId = options.sessionId || `wenxin-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     if (!apiKey || !secretKey) {
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'error',
         sessionId,
         error: 'Wenxin API requires both API Key and Secret Key. Please configure them in Settings → AI Providers.'
-      }));
+      });
       // Send completion so frontend knows the session ended
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'claude-complete',
         sessionId,
         provider: 'wenxin',
         error: 'Wenxin API requires both API Key and Secret Key.'
-      }));
+      });
       return;
     }
 
@@ -112,13 +112,13 @@ class WenxinProvider extends BaseProvider {
     const controller = new AbortController();
     this.addSession(sessionId, { controller });
 
-    ws.send(JSON.stringify({
+    ws.send({
       type: 'session-created',
       sessionId,
       model,
       provider: 'wenxin',
       cwd: options.cwd || ''
-    }));
+    });
 
     try {
       const accessToken = await this.getAccessToken(apiKey, secretKey);
@@ -174,25 +174,25 @@ class WenxinProvider extends BaseProvider {
 
             if (data.result) {
               fullContent += data.result;
-              ws.send(JSON.stringify({
+              ws.send({
                 type: 'claude-response',
                 sessionId,
                 data: {
                   type: 'content_block_delta',
                   delta: { type: 'text_delta', text: data.result }
                 }
-              }));
+              });
             }
 
             if (data.is_end) {
-              ws.send(JSON.stringify({
+              ws.send({
                 type: 'claude-response',
                 sessionId,
                 data: { type: 'content_block_stop' }
-              }));
+              });
 
               if (data.usage) {
-                ws.send(JSON.stringify({
+                ws.send({
                   type: 'claude-response',
                   sessionId,
                   data: {
@@ -203,7 +203,7 @@ class WenxinProvider extends BaseProvider {
                       total_tokens: data.usage.total_tokens || 0
                     }
                   }
-                }));
+                });
               }
             }
 
@@ -218,30 +218,30 @@ class WenxinProvider extends BaseProvider {
         }
       }
 
-      ws.send(JSON.stringify({
+      ws.send({
         type: 'claude-complete',
         sessionId,
         provider: 'wenxin',
         result: { content: fullContent, model, provider: 'wenxin' }
-      }));
+      });
 
     } catch (error) {
       if (error.name === 'AbortError') {
-        ws.send(JSON.stringify({
+        ws.send({
           type: 'session-aborted',
           sessionId,
           provider: 'wenxin',
           success: true
-        }));
+        });
       } else {
         console.error('[wenxin] Query error:', error.message);
-        ws.send(JSON.stringify({ type: 'error', sessionId, error: error.message }));
-        ws.send(JSON.stringify({
+        ws.send({ type: 'error', sessionId, error: error.message });
+        ws.send({
           type: 'claude-complete',
           sessionId,
           provider: 'wenxin',
           error: error.message
-        }));
+        });
       }
     } finally {
       this.removeSession(sessionId);

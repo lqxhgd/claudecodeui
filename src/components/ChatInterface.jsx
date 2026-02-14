@@ -1935,6 +1935,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
   // (prevents background sessions from streaming into a different view).
   const pendingViewSessionRef = useRef(null);
   const commandQueryTimerRef = useRef(null);
+  const responseTimeoutRef = useRef(null);
+  const lastMessageReceivedRef = useRef(null);
   const [debouncedInput, setDebouncedInput] = useState('');
   const [showFileDropdown, setShowFileDropdown] = useState(false);
   const [fileList, setFileList] = useState([]);
@@ -1968,6 +1970,11 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
   });
   const [codexModel, setCodexModel] = useState(() => {
     return localStorage.getItem('codex-model') || CODEX_MODELS.DEFAULT;
+  });
+  const [aiModel, setAiModel] = useState(() => {
+    const saved = localStorage.getItem(`${provider}-model`);
+    const models = getModelsForProvider(provider);
+    return saved || (models?.DEFAULT || '');
   });
   // Track provider transitions so we only clear approvals when provider truly changes.
   // This does not sync with the backend; it just prevents UI prompts from disappearing.
@@ -2007,6 +2014,13 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     if (lastProviderRef.current !== provider) {
       setPendingPermissionRequests([]);
       lastProviderRef.current = provider;
+
+      // Update aiModel state when switching to a Chinese AI provider
+      if (['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider)) {
+        const saved = localStorage.getItem(`${provider}-model`);
+        const models = getModelsForProvider(provider);
+        setAiModel(saved || (models?.DEFAULT || ''));
+      }
     }
   }, [provider]);
 
@@ -3264,9 +3278,40 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     }
   }, [currentSessionId, processingSessions]);
 
+  // Response timeout: if isLoading is true but no WebSocket messages arrive
+  // for 30 seconds, assume the session is stuck and clear loading state.
+  useEffect(() => {
+    if (isLoading) {
+      lastMessageReceivedRef.current = Date.now();
+
+      const checkTimeout = () => {
+        const elapsed = Date.now() - (lastMessageReceivedRef.current || 0);
+        if (elapsed >= 30000 && isLoading) {
+          console.warn('[ChatInterface] Response timeout: no messages received for 30s, clearing loading state');
+          setIsLoading(false);
+          setCanAbortSession(false);
+          setClaudeStatus(null);
+          setChatMessages(prev => [...prev, {
+            type: 'error',
+            content: 'Response timeout: no response received. Please check if the AI provider is configured correctly.',
+            timestamp: new Date()
+          }]);
+        }
+      };
+
+      responseTimeoutRef.current = setInterval(checkTimeout, 5000);
+      return () => clearInterval(responseTimeoutRef.current);
+    } else {
+      clearInterval(responseTimeoutRef.current);
+    }
+  }, [isLoading]);
+
   useEffect(() => {
     // Handle WebSocket messages
     if (latestMessage) {
+      // Reset response timeout on any message
+      lastMessageReceivedRef.current = Date.now();
+
       const messageData = latestMessage.data?.message || latestMessage.data;
 
       // Filter messages by session ID to prevent cross-session interference
@@ -4653,7 +4698,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
           cwd: selectedProject.fullPath || selectedProject.path,
           projectPath: selectedProject.fullPath || selectedProject.path,
           sessionId: effectiveSessionId,
-          model: safeLocalStorage.getItem(`${provider}-model`) || undefined
+          model: aiModel || undefined
         }
       });
     } else {
@@ -4690,7 +4735,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
     if (selectedProject) {
       safeLocalStorage.removeItem(`draft_input_${selectedProject.name}`);
     }
-  }, [input, isLoading, selectedProject, attachedImages, uploadedFiles, currentSessionId, selectedSession, provider, permissionMode, onSessionActive, cursorModel, claudeModel, codexModel, sendMessage, setInput, setAttachedImages, setUploadingImages, setImageErrors, setIsTextareaExpanded, textareaRef, setChatMessages, setIsLoading, setCanAbortSession, setClaudeStatus, setIsUserScrolledUp, scrollToBottom, thinkingMode]);
+  }, [input, isLoading, selectedProject, attachedImages, uploadedFiles, currentSessionId, selectedSession, provider, permissionMode, onSessionActive, cursorModel, claudeModel, codexModel, aiModel, sendMessage, setInput, setAttachedImages, setUploadingImages, setImageErrors, setIsTextareaExpanded, textareaRef, setChatMessages, setIsLoading, setCanAbortSession, setClaudeStatus, setIsUserScrolledUp, scrollToBottom, thinkingMode]);
 
   const handleGrantToolPermission = useCallback((suggestion) => {
     if (!suggestion || provider !== 'claude') {
@@ -5006,13 +5051,35 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
   };
   
   const handleAbortSession = () => {
-    if (currentSessionId && canAbortSession) {
+    if (!canAbortSession) return;
+
+    // Try to find a valid session ID: current session → pending session from sessionStorage
+    const effectiveSessionId = currentSessionId || sessionStorage.getItem('pendingSessionId');
+
+    if (effectiveSessionId) {
       sendMessage({
         type: 'abort-session',
-        sessionId: currentSessionId,
+        sessionId: effectiveSessionId,
         provider: provider
       });
     }
+
+    // Always force-clear loading state client-side as a fallback
+    // (in case the server can't find the session or the abort message fails)
+    setTimeout(() => {
+      setIsLoading(prev => {
+        if (prev) {
+          setCanAbortSession(false);
+          setClaudeStatus(null);
+          setChatMessages(msgs => [...msgs, {
+            type: 'assistant',
+            content: 'Session interrupted by user.',
+            timestamp: new Date()
+          }]);
+        }
+        return false;
+      });
+    }, 2000);
   };
 
   const handleModeSwitch = () => {
@@ -5402,8 +5469,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, late
               )}
               {['kimi', 'qwen', 'deepseek', 'glm', 'doubao', 'wenxin'].includes(provider) && (
                 <select
-                  value={localStorage.getItem(`${provider}-model`) || (getModelsForProvider(provider)?.DEFAULT || '')}
-                  onChange={(e) => { localStorage.setItem(`${provider}-model`, e.target.value); }}
+                  value={aiModel}
+                  onChange={(e) => { setAiModel(e.target.value); localStorage.setItem(`${provider}-model`, e.target.value); }}
                   className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer"
                 >
                   {(getModelsForProvider(provider)?.OPTIONS || []).map(({ value, label }) => (
