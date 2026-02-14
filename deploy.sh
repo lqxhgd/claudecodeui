@@ -69,34 +69,43 @@ if [ ! -f .env ]; then
     echo -e "${CYAN}Created .env file from template${NC}"
 fi
 
-# Prompt for Anthropic API key if not set
-if ! grep -q "ANTHROPIC_API_KEY=sk-" .env 2>/dev/null; then
-    echo ""
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}Claude Code CLI 需要 API Key 和 API URL 来连接 Claude。${NC}"
-    echo -e "${CYAN}You need an API key and optionally a custom API URL.${NC}"
-    echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    read -p "Enter your ANTHROPIC_API_KEY: " API_KEY
-    if [ -n "$API_KEY" ]; then
-        if grep -q "ANTHROPIC_API_KEY" .env; then
-            sed -i "s|ANTHROPIC_API_KEY=.*|ANTHROPIC_API_KEY=$API_KEY|" .env
-        else
-            echo "ANTHROPIC_API_KEY=$API_KEY" >> .env
-        fi
-        echo -e "${GREEN}API key configured${NC}"
-    else
-        echo -e "${RED}Warning: No API key provided. Claude features will not work.${NC}"
+# Prompt for AI model API keys
+echo ""
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${CYAN}配置 AI 模型 API Key / Configure AI Model API Keys${NC}"
+echo -e "${CYAN}支持: Kimi, Claude, DeepSeek, Qwen 等${NC}"
+echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+# Kimi (Moonshot)
+if ! grep -q "MOONSHOT_API_KEY=sk-" .env 2>/dev/null; then
+    read -p "Kimi (Moonshot) API Key (留空跳过): " KIMI_KEY
+    if [ -n "$KIMI_KEY" ]; then
+        sed -i "s|MOONSHOT_API_KEY=.*|MOONSHOT_API_KEY=$KIMI_KEY|" .env
+        echo -e "${GREEN}Kimi key configured${NC}"
     fi
-    echo ""
-    read -p "Enter custom API URL (leave empty for default, or enter your URL): " API_URL
-    if [ -n "$API_URL" ]; then
-        if grep -q "ANTHROPIC_BASE_URL" .env; then
-            sed -i "s|ANTHROPIC_BASE_URL=.*|ANTHROPIC_BASE_URL=$API_URL|" .env
-        else
-            echo "ANTHROPIC_BASE_URL=$API_URL" >> .env
+fi
+
+# Claude (optional)
+if ! grep -q "ANTHROPIC_AUTH_TOKEN=." .env 2>/dev/null && ! grep -q "ANTHROPIC_API_KEY=sk-" .env 2>/dev/null; then
+    read -p "Claude Auth Token (留空跳过): " CLAUDE_KEY
+    if [ -n "$CLAUDE_KEY" ]; then
+        sed -i "s|ANTHROPIC_AUTH_TOKEN=.*|ANTHROPIC_AUTH_TOKEN=$CLAUDE_KEY|" .env
+        echo -e "${GREEN}Claude token configured${NC}"
+        read -p "Claude API URL (留空用默认): " CLAUDE_URL
+        if [ -n "$CLAUDE_URL" ]; then
+            sed -i "s|ANTHROPIC_BASE_URL=.*|ANTHROPIC_BASE_URL=$CLAUDE_URL|" .env
+            echo -e "${GREEN}Claude API URL: $CLAUDE_URL${NC}"
         fi
-        echo -e "${GREEN}Custom API URL configured: $API_URL${NC}"
+    fi
+fi
+
+# DeepSeek (optional)
+if ! grep -q "DEEPSEEK_API_KEY=sk-" .env 2>/dev/null; then
+    read -p "DeepSeek API Key (留空跳过): " DS_KEY
+    if [ -n "$DS_KEY" ]; then
+        sed -i "s|DEEPSEEK_API_KEY=.*|DEEPSEEK_API_KEY=$DS_KEY|" .env
+        echo -e "${GREEN}DeepSeek key configured${NC}"
     fi
 fi
 

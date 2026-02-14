@@ -12,12 +12,11 @@ services:
       - PORT=3001
       - CONTEXT_WINDOW=${CONTEXT_WINDOW:-160000}
       - ALLOW_SELF_REGISTRATION=${ALLOW_SELF_REGISTRATION:-true}
-      # Claude Code CLI authentication
+      # Claude Code CLI authentication (set one of these)
+      - ANTHROPIC_AUTH_TOKEN=${ANTHROPIC_AUTH_TOKEN:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      # Custom API base URL (if not using default api.anthropic.com)
+      # Custom API base URL
       - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
-      - CLAUDE_CODE_USE_BEDROCK=${CLAUDE_CODE_USE_BEDROCK:-}
-      - CLAUDE_CODE_USE_VERTEX=${CLAUDE_CODE_USE_VERTEX:-}
       # Chinese AI model API keys (optional)
       - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
