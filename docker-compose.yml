@@ -5,12 +5,15 @@ services:
       - "${PORT:-3001}:3001"
     volumes:
       - data:/data
+      - claude-config:/root/.claude
     environment:
       - DATABASE_PATH=/data/auth.db
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - PORT=3001
       - CONTEXT_WINDOW=${CONTEXT_WINDOW:-160000}
       - ALLOW_SELF_REGISTRATION=${ALLOW_SELF_REGISTRATION:-true}
+      # Anthropic API key (required for Claude CLI)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       # Chinese AI model API keys (optional)
       - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
@@ -31,3 +34,4 @@ services:
 
 volumes:
   data:
+  claude-config:

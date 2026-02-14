@@ -30,16 +30,21 @@ RUN npm run build
 # =============================================================================
 FROM node:20-bookworm-slim
 
-# Install minimal runtime dependencies
+# Install runtime dependencies
 # - git: required for Git operations in the UI
-# - python3, make, g++: required for native modules (node-pty needs build tools
-#   at runtime for proper operation; better-sqlite3 and bcrypt also use native bindings)
+# - python3, make, g++: required for native modules (node-pty, better-sqlite3, bcrypt)
+# - curl, bash: required for Claude CLI installation
 RUN apt-get update && apt-get install -y \
     git \
     python3 \
     make \
     g++ \
+    curl \
+    bash \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Claude CLI (Anthropic official CLI)
+RUN npm install -g @anthropic-ai/claude-code
 
 WORKDIR /app
 
@@ -58,7 +63,8 @@ COPY shared/ ./shared/
 COPY public/ ./public/
 
 # Create data directory for SQLite database persistence
-RUN mkdir -p /data
+# and Claude config directory for authentication
+RUN mkdir -p /data /root/.claude
 
 # Environment configuration
 ENV DATABASE_PATH=/data/auth.db
