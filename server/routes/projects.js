@@ -12,8 +12,31 @@ function sanitizeGitError(message, token) {
   return message.replace(new RegExp(token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '***');
 }
 
-// Configure allowed workspace root (defaults to user's home directory)
-export const WORKSPACES_ROOT = process.env.WORKSPACES_ROOT || os.homedir();
+// Configure allowed workspace root
+// In multi-user mode, each user gets their own subdirectory under this root
+export const WORKSPACES_ROOT = process.env.WORKSPACES_ROOT || path.join(os.homedir(), 'workspaces');
+
+/**
+ * Get the workspace root for a specific user.
+ * Each user gets an isolated directory: WORKSPACES_ROOT/{username}/
+ * @param {string} username - The username
+ * @returns {string} The absolute path to the user's workspace root
+ */
+export function getUserWorkspaceRoot(username) {
+  if (!username) return WORKSPACES_ROOT;
+  return path.join(WORKSPACES_ROOT, username);
+}
+
+/**
+ * Ensure the user's workspace directory exists, creating it if needed.
+ * @param {string} username - The username
+ * @returns {Promise<string>} The absolute path to the user's workspace root
+ */
+export async function ensureUserWorkspace(username) {
+  const userRoot = getUserWorkspaceRoot(username);
+  await fs.mkdir(userRoot, { recursive: true });
+  return userRoot;
+}
 
 // System-critical paths that should never be used as workspace directories
 export const FORBIDDEN_PATHS = [
@@ -46,9 +69,12 @@ export const FORBIDDEN_PATHS = [
 /**
  * Validates that a path is safe for workspace operations
  * @param {string} requestedPath - The path to validate
+ * @param {string} [workspaceRoot] - Custom workspace root (e.g., per-user root). Defaults to WORKSPACES_ROOT.
  * @returns {Promise<{valid: boolean, resolvedPath?: string, error?: string}>}
  */
-export async function validateWorkspacePath(requestedPath) {
+export async function validateWorkspacePath(requestedPath, workspaceRoot) {
+  const effectiveRoot = workspaceRoot || WORKSPACES_ROOT;
+
   try {
     // Resolve to absolute path
     let absolutePath = path.resolve(requestedPath);
@@ -63,15 +89,22 @@ export async function validateWorkspacePath(requestedPath) {
     }
 
     // Additional check for paths starting with forbidden directories
+    const resolvedEffectiveRoot = path.resolve(effectiveRoot);
     for (const forbidden of FORBIDDEN_PATHS) {
       if (normalizedPath === forbidden ||
           normalizedPath.startsWith(forbidden + path.sep)) {
         // Exception: /var/tmp and similar user-accessible paths might be allowed
-        // but /var itself and most /var subdirectories should be blocked
         if (forbidden === '/var' &&
             (normalizedPath.startsWith('/var/tmp') ||
              normalizedPath.startsWith('/var/folders'))) {
           continue; // Allow these specific cases
+        }
+
+        // Exception: paths under the configured workspace root are always allowed
+        // (e.g., /root/workspaces/user/project even though /root is forbidden)
+        if (normalizedPath.startsWith(resolvedEffectiveRoot + path.sep) ||
+            normalizedPath === resolvedEffectiveRoot) {
+          continue;
         }
 
         return {
@@ -111,14 +144,16 @@ export async function validateWorkspacePath(requestedPath) {
     }
 
     // Resolve the workspace root to its real path
-    const resolvedWorkspaceRoot = await fs.realpath(WORKSPACES_ROOT);
+    // Ensure the effective root directory exists first
+    await fs.mkdir(effectiveRoot, { recursive: true });
+    const resolvedWorkspaceRoot = await fs.realpath(effectiveRoot);
 
     // Ensure the resolved path is contained within the allowed workspace root
     if (!realPath.startsWith(resolvedWorkspaceRoot + path.sep) &&
         realPath !== resolvedWorkspaceRoot) {
       return {
         valid: false,
-        error: `Workspace path must be within the allowed workspace root: ${WORKSPACES_ROOT}`
+        error: `Workspace path must be within your workspace directory`
       };
     }
 
@@ -185,8 +220,24 @@ router.post('/create-workspace', async (req, res) => {
       return res.status(400).json({ error: 'workspaceType must be "existing" or "new"' });
     }
 
+    // Resolve path relative to user's workspace root
+    const username = req.user?.username;
+    const userRoot = getUserWorkspaceRoot(username);
+    await ensureUserWorkspace(username);
+
+    // Expand ~ to user's workspace root
+    let resolvedPath = workspacePath;
+    if (resolvedPath === '~') {
+      resolvedPath = userRoot;
+    } else if (resolvedPath.startsWith('~/') || resolvedPath.startsWith('~\\')) {
+      resolvedPath = path.join(userRoot, resolvedPath.slice(2));
+    } else if (!path.isAbsolute(resolvedPath)) {
+      // Relative path → resolve under user's workspace root
+      resolvedPath = path.join(userRoot, resolvedPath);
+    }
+
     // Validate path safety before any operations
-    const validation = await validateWorkspacePath(workspacePath);
+    const validation = await validateWorkspacePath(resolvedPath, userRoot);
     if (!validation.valid) {
       return res.status(400).json({
         error: 'Invalid workspace path',
@@ -353,7 +404,21 @@ router.get('/clone-progress', async (req, res) => {
       return;
     }
 
-    const validation = await validateWorkspacePath(workspacePath);
+    // Resolve path relative to user's workspace root
+    const username = req.user?.username;
+    const userRoot = getUserWorkspaceRoot(username);
+    await ensureUserWorkspace(username);
+
+    let resolvedInputPath = workspacePath;
+    if (resolvedInputPath === '~') {
+      resolvedInputPath = userRoot;
+    } else if (resolvedInputPath.startsWith('~/') || resolvedInputPath.startsWith('~\\')) {
+      resolvedInputPath = path.join(userRoot, resolvedInputPath.slice(2));
+    } else if (!path.isAbsolute(resolvedInputPath)) {
+      resolvedInputPath = path.join(userRoot, resolvedInputPath);
+    }
+
+    const validation = await validateWorkspacePath(resolvedInputPath, userRoot);
     if (!validation.valid) {
       sendEvent('error', { message: validation.error });
       res.end();

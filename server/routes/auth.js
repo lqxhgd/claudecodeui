@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import { userDb, db } from '../database/db.js';
 import { generateToken, authenticateToken, requireAdmin } from '../middleware/auth.js';
+import { ensureUserWorkspace } from './projects.js';
 
 const router = express.Router();
 
@@ -62,6 +63,13 @@ router.post('/register', async (req, res) => {
 
       db.prepare('COMMIT').run();
 
+      // Create user's isolated workspace directory
+      try {
+        await ensureUserWorkspace(user.username);
+      } catch (err) {
+        console.error('Failed to create user workspace directory:', err);
+      }
+
       res.json({
         success: true,
         user: { id: user.id, username: user.username, role: user.role },
@@ -109,6 +117,13 @@ router.post('/login', async (req, res) => {
 
     // Update last login
     userDb.updateLastLogin(user.id);
+
+    // Ensure user's workspace directory exists
+    try {
+      await ensureUserWorkspace(user.username);
+    } catch (err) {
+      console.error('Failed to create user workspace directory:', err);
+    }
 
     res.json({
       success: true,

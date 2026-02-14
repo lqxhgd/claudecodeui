@@ -13,22 +13,27 @@ import path from 'path';
 import mime from 'mime-types';
 
 import { extractProjectDirectory } from '../projects.js';
-import { WORKSPACES_ROOT, validateWorkspacePath } from './projects.js';
+import { WORKSPACES_ROOT, validateWorkspacePath, getUserWorkspaceRoot, ensureUserWorkspace } from './projects.js';
 import { getFileTree } from '../services/file-tree.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
 /**
- * Expand ~ prefix to the configured workspace root.
+ * Expand ~ prefix to the user's workspace root.
  */
-function expandWorkspacePath(inputPath) {
+function expandWorkspacePath(inputPath, userRoot) {
+  const root = userRoot || WORKSPACES_ROOT;
   if (!inputPath) return inputPath;
   if (inputPath === '~') {
-    return WORKSPACES_ROOT;
+    return root;
   }
   if (inputPath.startsWith('~/') || inputPath.startsWith('~\\')) {
-    return path.join(WORKSPACES_ROOT, inputPath.slice(2));
+    return path.join(root, inputPath.slice(2));
+  }
+  // Relative path → resolve under user's workspace root
+  if (!path.isAbsolute(inputPath)) {
+    return path.join(root, inputPath);
   }
   return inputPath;
 }
@@ -221,17 +226,21 @@ router.get('/browse-filesystem', authenticateToken, async (req, res) => {
   try {
     const { path: dirPath } = req.query;
 
-    console.log('[API] Browse filesystem request for path:', dirPath);
-    console.log('[API] WORKSPACES_ROOT is:', WORKSPACES_ROOT);
-    // Default to home directory if no path provided
-    const defaultRoot = WORKSPACES_ROOT;
-    let targetPath = dirPath ? expandWorkspacePath(dirPath) : defaultRoot;
+    // Per-user workspace root
+    const username = req.user?.username;
+    const userRoot = getUserWorkspaceRoot(username);
+    await ensureUserWorkspace(username);
+
+    console.log('[API] Browse filesystem request for path:', dirPath, 'user:', username, 'userRoot:', userRoot);
+
+    // Default to user's workspace root if no path provided
+    let targetPath = dirPath ? expandWorkspacePath(dirPath, userRoot) : userRoot;
 
     // Resolve and normalize the path
     targetPath = path.resolve(targetPath);
 
-    // Security check - ensure path is within allowed workspace root
-    const validation = await validateWorkspacePath(targetPath);
+    // Security check - ensure path is within user's workspace root
+    const validation = await validateWorkspacePath(targetPath, userRoot);
     if (!validation.valid) {
       return res.status(403).json({ error: validation.error });
     }
@@ -268,15 +277,15 @@ router.get('/browse-filesystem', authenticateToken, async (req, res) => {
         return a.name.localeCompare(b.name);
       });
 
-    // Add common directories if browsing home directory
+    // Add common directories if browsing user's workspace root
     const suggestions = [];
-    let resolvedWorkspaceRoot = defaultRoot;
+    let resolvedUserRoot = userRoot;
     try {
-      resolvedWorkspaceRoot = await fsPromises.realpath(defaultRoot);
+      resolvedUserRoot = await fsPromises.realpath(userRoot);
     } catch (error) {
-      // Use default root as-is if realpath fails
+      // Use user root as-is if realpath fails
     }
-    if (resolvedPath === resolvedWorkspaceRoot) {
+    if (resolvedPath === resolvedUserRoot) {
       const commonDirs = ['Desktop', 'Documents', 'Projects', 'Development', 'Dev', 'Code', 'workspace'];
       const existingCommon = directories.filter(dir => commonDirs.includes(dir.name));
       const otherDirs = directories.filter(dir => !commonDirs.includes(dir.name));
@@ -305,9 +314,15 @@ router.post('/create-folder', authenticateToken, async (req, res) => {
     if (!folderPath) {
       return res.status(400).json({ error: 'Path is required' });
     }
-    const expandedPath = expandWorkspacePath(folderPath);
+
+    // Per-user workspace root
+    const username = req.user?.username;
+    const userRoot = getUserWorkspaceRoot(username);
+    await ensureUserWorkspace(username);
+
+    const expandedPath = expandWorkspacePath(folderPath, userRoot);
     const resolvedInput = path.resolve(expandedPath);
-    const validation = await validateWorkspacePath(resolvedInput);
+    const validation = await validateWorkspacePath(resolvedInput, userRoot);
     if (!validation.valid) {
       return res.status(403).json({ error: validation.error });
     }

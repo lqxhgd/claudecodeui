@@ -55,7 +55,7 @@ import mcpUtilsRoutes from './routes/mcp-utils.js';
 import commandsRoutes from './routes/commands.js';
 import settingsRoutes from './routes/settings.js';
 import agentRoutes from './routes/agent.js';
-import projectsRoutes, { WORKSPACES_ROOT, validateWorkspacePath } from './routes/projects.js';
+import projectsRoutes, { WORKSPACES_ROOT, validateWorkspacePath, getUserWorkspaceRoot, ensureUserWorkspace } from './routes/projects.js';
 import cliAuthRoutes from './routes/cli-auth.js';
 import userRoutes from './routes/user.js';
 import codexRoutes from './routes/codex.js';
@@ -613,13 +613,34 @@ app.post('/api/projects/create', authenticateToken, async (req, res) => {
     }
 });
 
-const expandWorkspacePath = (inputPath) => {
+// Get current user's workspace info
+app.get('/api/workspace-info', authenticateToken, async (req, res) => {
+    try {
+        const username = req.user?.username;
+        const userRoot = getUserWorkspaceRoot(username);
+        await ensureUserWorkspace(username);
+        res.json({
+            workspaceRoot: userRoot,
+            username: username
+        });
+    } catch (error) {
+        console.error('Error getting workspace info:', error);
+        res.status(500).json({ error: 'Failed to get workspace info' });
+    }
+});
+
+const expandWorkspacePath = (inputPath, userRoot) => {
+    const root = userRoot || WORKSPACES_ROOT;
     if (!inputPath) return inputPath;
     if (inputPath === '~') {
-        return WORKSPACES_ROOT;
+        return root;
     }
     if (inputPath.startsWith('~/') || inputPath.startsWith('~\\')) {
-        return path.join(WORKSPACES_ROOT, inputPath.slice(2));
+        return path.join(root, inputPath.slice(2));
+    }
+    // Relative path → resolve under user's workspace root
+    if (!path.isAbsolute(inputPath)) {
+        return path.join(root, inputPath);
     }
     return inputPath;
 };
@@ -628,38 +649,42 @@ const expandWorkspacePath = (inputPath) => {
 app.get('/api/browse-filesystem', authenticateToken, async (req, res) => {
     try {
         const { path: dirPath } = req.query;
-        
-        console.log('[API] Browse filesystem request for path:', dirPath);
-        console.log('[API] WORKSPACES_ROOT is:', WORKSPACES_ROOT);
-        // Default to home directory if no path provided
-        const defaultRoot = WORKSPACES_ROOT;
-        let targetPath = dirPath ? expandWorkspacePath(dirPath) : defaultRoot;
-        
+
+        // Per-user workspace root
+        const username = req.user?.username;
+        const userRoot = getUserWorkspaceRoot(username);
+        await ensureUserWorkspace(username);
+
+        console.log('[API] Browse filesystem request for path:', dirPath, 'user:', username, 'userRoot:', userRoot);
+
+        // Default to user's workspace root if no path provided
+        let targetPath = dirPath ? expandWorkspacePath(dirPath, userRoot) : userRoot;
+
         // Resolve and normalize the path
         targetPath = path.resolve(targetPath);
 
-        // Security check - ensure path is within allowed workspace root
-        const validation = await validateWorkspacePath(targetPath);
+        // Security check - ensure path is within user's workspace root
+        const validation = await validateWorkspacePath(targetPath, userRoot);
         if (!validation.valid) {
             return res.status(403).json({ error: validation.error });
         }
         const resolvedPath = validation.resolvedPath || targetPath;
-        
+
         // Security check - ensure path is accessible
         try {
             await fs.promises.access(resolvedPath);
             const stats = await fs.promises.stat(resolvedPath);
-            
+
             if (!stats.isDirectory()) {
                 return res.status(400).json({ error: 'Path is not a directory' });
             }
         } catch (err) {
             return res.status(404).json({ error: 'Directory not accessible' });
         }
-        
+
         // Use existing getFileTree function with shallow depth (only direct children)
         const fileTree = await getFileTree(resolvedPath, 1, 0, false); // maxDepth=1, showHidden=false
-        
+
         // Filter only directories and format for suggestions
         const directories = fileTree
             .filter(item => item.type === 'directory')
@@ -675,30 +700,30 @@ app.get('/api/browse-filesystem', authenticateToken, async (req, res) => {
                 if (!aHidden && bHidden) return -1;
                 return a.name.localeCompare(b.name);
             });
-            
-        // Add common directories if browsing home directory
+
+        // Add common directories if browsing user's workspace root
         const suggestions = [];
-        let resolvedWorkspaceRoot = defaultRoot;
+        let resolvedUserRoot = userRoot;
         try {
-            resolvedWorkspaceRoot = await fsPromises.realpath(defaultRoot);
+            resolvedUserRoot = await fsPromises.realpath(userRoot);
         } catch (error) {
-            // Use default root as-is if realpath fails
+            // Use user root as-is if realpath fails
         }
-        if (resolvedPath === resolvedWorkspaceRoot) {
+        if (resolvedPath === resolvedUserRoot) {
             const commonDirs = ['Desktop', 'Documents', 'Projects', 'Development', 'Dev', 'Code', 'workspace'];
             const existingCommon = directories.filter(dir => commonDirs.includes(dir.name));
             const otherDirs = directories.filter(dir => !commonDirs.includes(dir.name));
-            
+
             suggestions.push(...existingCommon, ...otherDirs);
         } else {
             suggestions.push(...directories);
         }
-        
+
         res.json({
             path: resolvedPath,
             suggestions: suggestions
         });
-        
+
     } catch (error) {
         console.error('Error browsing filesystem:', error);
         res.status(500).json({ error: 'Failed to browse filesystem' });
@@ -711,9 +736,15 @@ app.post('/api/create-folder', authenticateToken, async (req, res) => {
         if (!folderPath) {
             return res.status(400).json({ error: 'Path is required' });
         }
-        const expandedPath = expandWorkspacePath(folderPath);
+
+        // Per-user workspace root
+        const username = req.user?.username;
+        const userRoot = getUserWorkspaceRoot(username);
+        await ensureUserWorkspace(username);
+
+        const expandedPath = expandWorkspacePath(folderPath, userRoot);
         const resolvedInput = path.resolve(expandedPath);
-        const validation = await validateWorkspacePath(resolvedInput);
+        const validation = await validateWorkspacePath(resolvedInput, userRoot);
         if (!validation.valid) {
             return res.status(403).json({ error: validation.error });
         }

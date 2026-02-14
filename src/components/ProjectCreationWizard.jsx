@@ -18,6 +18,9 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
   const [tokenMode, setTokenMode] = useState('stored'); // 'stored' | 'new' | 'none'
   const [newGithubToken, setNewGithubToken] = useState('');
 
+  // User workspace info
+  const [workspaceRoot, setWorkspaceRoot] = useState('');
+
   // UI state
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState(null);
@@ -34,6 +37,22 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [cloneProgress, setCloneProgress] = useState('');
+
+  // Fetch workspace info on mount
+  useEffect(() => {
+    const fetchWorkspaceInfo = async () => {
+      try {
+        const response = await api.workspaceInfo();
+        if (response.ok) {
+          const data = await response.json();
+          setWorkspaceRoot(data.workspaceRoot || '');
+        }
+      } catch (err) {
+        console.error('Failed to fetch workspace info:', err);
+      }
+    };
+    fetchWorkspaceInfo();
+  }, []);
 
   // Load available GitHub tokens when needed
   useEffect(() => {
@@ -93,6 +112,22 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
     } catch (error) {
       console.error('Error loading path suggestions:', error);
     }
+  };
+
+  // Format display path: show relative to workspace root for clarity
+  const getDisplayPath = (inputPath) => {
+    const trimmed = inputPath.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('~/') || trimmed.startsWith('~\\')) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('/') && workspaceRoot && trimmed.startsWith(workspaceRoot)) {
+      return '~' + trimmed.slice(workspaceRoot.length);
+    }
+    if (!trimmed.startsWith('/') && !trimmed.startsWith('~')) {
+      return `~/${trimmed}`;
+    }
+    return trimmed;
   };
 
   const handleNext = () => {
@@ -399,7 +434,7 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
                       type="text"
                       value={workspacePath}
                       onChange={(e) => setWorkspacePath(e.target.value)}
-                      placeholder={workspaceType === 'existing' ? '/path/to/existing/workspace' : '/path/to/new/workspace'}
+                      placeholder={workspaceType === 'existing' ? 'my-project' : 'new-project'}
                       className="w-full"
                     />
                     {showPathDropdown && pathSuggestions.length > 0 && (
@@ -428,9 +463,14 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
                   </Button>
                 </div>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {workspaceType === 'existing'
+                  {workspacePath && !workspacePath.startsWith('/') && !workspacePath.startsWith('~')
+                    ? `→ ${getDisplayPath(workspacePath)}`
+                    : workspaceType === 'existing'
                     ? t('projectWizard.step2.existingHelp')
                     : t('projectWizard.step2.newHelp')}
+                  {workspaceRoot && !workspacePath && (
+                    <span className="block mt-1 text-gray-400">{t('projectWizard.step2.workspaceRootHint', { root: '~' })}</span>
+                  )}
                 </p>
               </div>
 
@@ -598,7 +638,7 @@ const ProjectCreationWizard = ({ onClose, onProjectCreated }) => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">{t('projectWizard.step3.path')}</span>
                     <span className="font-mono text-xs text-gray-900 dark:text-white break-all">
-                      {workspacePath}
+                      {getDisplayPath(workspacePath)}
                     </span>
                   </div>
                   {workspaceType === 'new' && githubUrl && (

@@ -165,6 +165,9 @@ export const api = {
       }),
   },
   
+  // Get user's workspace info
+  workspaceInfo: () => authenticatedFetch('/api/workspace-info'),
+
   // Browse filesystem for project suggestions
   browseFilesystem: (dirPath = null) => {
     const params = new URLSearchParams();

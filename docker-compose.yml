@@ -5,9 +5,11 @@ services:
       - "${PORT:-3001}:3001"
     volumes:
       - data:/data
+      - workspaces:/data/workspaces
       - claude-config:/root/.claude
     environment:
       - DATABASE_PATH=/data/auth.db
+      - WORKSPACES_ROOT=/data/workspaces
       - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
       - PORT=3001
       - CONTEXT_WINDOW=${CONTEXT_WINDOW:-160000}
@@ -37,4 +39,5 @@ services:
 
 volumes:
   data:
+  workspaces:
   claude-config:
