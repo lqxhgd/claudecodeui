@@ -66,8 +66,16 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(true);
       setError(null);
 
-      // Check if system needs setup
-      const statusResponse = await api.auth.status();
+      // Check if system needs setup (with timeout to prevent infinite loading)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      let statusResponse;
+      try {
+        statusResponse = await fetch('/api/auth/status', { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       const statusData = await statusResponse.json();
 
       if (statusData.needsSetup) {
@@ -101,7 +109,11 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('[AuthContext] Auth status check failed:', error);
-      setError('Failed to check authentication status');
+      if (error.name === 'AbortError') {
+        setError('Connection timeout. Server may be starting up.');
+      } else {
+        setError('Failed to connect to server. Please check if the server is running.');
+      }
     } finally {
       setIsLoading(false);
     }
