@@ -975,139 +975,47 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }) {
 
         <div className="flex-1 overflow-y-auto">
           {/* Tab Navigation */}
-          <div className="border-b border-border overflow-x-auto scrollbar-hide">
-            <div className="flex flex-nowrap whitespace-nowrap px-4 md:px-6">
-              <button
-                onClick={() => setActiveTab('agents')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'agents'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t('mainTabs.agents')}
-              </button>
-              <button
-                onClick={() => setActiveTab('appearance')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'appearance'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t('mainTabs.appearance')}
-              </button>
-              <button
-                onClick={() => setActiveTab('git')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'git'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <GitBranch className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.git')}
-              </button>
-              <button
-                onClick={() => setActiveTab('api')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'api'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Key className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.apiTokens')}
-              </button>
-              <button
-                onClick={() => setActiveTab('tasks')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'tasks'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t('mainTabs.tasks')}
-              </button>
-              <button
-                onClick={() => setActiveTab('ai-providers')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'ai-providers'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Bot className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.aiProviders', 'AI Models')}
-              </button>
-              <button
-                onClick={() => setActiveTab('notifications')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'notifications'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Bell className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.notifications', 'Notifications')}
-              </button>
-              <button
-                onClick={() => setActiveTab('skills')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'skills'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.skills', 'Skills')}
-              </button>
-              <button
-                onClick={() => setActiveTab('ai-events')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'ai-events'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Flame className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.aiEvents', 'AI Events')}
-              </button>
-              <button
-                onClick={() => setActiveTab('pdf-tool')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'pdf-tool'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <FileText className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.pdfTool', 'PDF Tool')}
-              </button>
-              <button
-                onClick={() => setActiveTab('bot')}
-                className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === 'bot'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <MessageSquare className="w-4 h-4 inline mr-2" />
-                {t('mainTabs.bot', 'Bot')}
-              </button>
+          <div className="relative border-b border-border">
+            <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
+            <div className="flex flex-nowrap whitespace-nowrap px-2 md:px-4 gap-0.5">
+              {[
+                { id: 'agents', label: t('mainTabs.agents') },
+                { id: 'appearance', label: t('mainTabs.appearance') },
+                { id: 'git', label: 'Git' },
+                { id: 'api', label: 'API' },
+                { id: 'tasks', label: t('mainTabs.tasks') },
+                { id: 'ai-providers', label: 'AI' },
+                { id: 'notifications', label: t('mainTabs.notifications', 'Notify') },
+                { id: 'skills', label: 'Skills' },
+                { id: 'ai-events', label: 'Events' },
+                { id: 'pdf-tool', label: 'PDF' },
+                { id: 'bot', label: 'Bot' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-2.5 py-2 text-xs font-medium border-b-2 transition-colors shrink-0 ${
+                    activeTab === tab.id
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
               {isAdmin && (
                 <button
                   onClick={() => setActiveTab('users')}
-                  className={`px-3 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                  className={`px-2.5 py-2 text-xs font-medium border-b-2 transition-colors shrink-0 ${
                     activeTab === 'users'
                       ? 'border-blue-600 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Users className="w-4 h-4 inline mr-2" />
                   {t('mainTabs.users')}
                 </button>
               )}
+            </div>
             </div>
           </div>
 
