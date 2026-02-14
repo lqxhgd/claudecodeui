@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Folder, FolderOpen, File, FileText, FileCode, List, TableProperties, Eye, Search, X } from 'lucide-react';
 import { cn } from '../lib/utils';
-import CodeEditor from './CodeEditor';
+const CodeEditor = React.lazy(() => import('./CodeEditor'));
 import ImageViewer from './ImageViewer';
 import { api } from '../utils/api';
 
@@ -461,11 +461,13 @@ function FileTree({ selectedProject }) {
       
       {/* Code Editor Modal */}
       {selectedFile && (
-        <CodeEditor
-          file={selectedFile}
-          onClose={() => setSelectedFile(null)}
-          projectPath={selectedFile.projectPath}
-        />
+        <Suspense fallback={<div className="flex items-center justify-center p-8"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+          <CodeEditor
+            file={selectedFile}
+            onClose={() => setSelectedFile(null)}
+            projectPath={selectedFile.projectPath}
+          />
+        </Suspense>
       )}
       
       {/* Image Viewer Modal */}

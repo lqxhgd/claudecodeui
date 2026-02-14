@@ -11,23 +11,31 @@
  * No session protection logic is implemented here - it's purely a props bridge.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import ChatInterface from './ChatInterface';
 import FileTree from './FileTree';
-import CodeEditor from './CodeEditor';
-import StandaloneShell from './StandaloneShell';
-import GitPanel from './GitPanel';
 import ErrorBoundary from './ErrorBoundary';
 import ClaudeLogo from './ClaudeLogo';
 import CursorLogo from './CursorLogo';
-import TaskList from './TaskList';
-import TaskDetail from './TaskDetail';
-import PRDEditor from './PRDEditor';
 import Tooltip from './Tooltip';
+
+// Lazy-load heavy components to reduce initial bundle size (~1MB saved)
+const CodeEditor = React.lazy(() => import('./CodeEditor'));
+const StandaloneShell = React.lazy(() => import('./StandaloneShell'));
+const GitPanel = React.lazy(() => import('./GitPanel'));
+const TaskList = React.lazy(() => import('./TaskList'));
+const TaskDetail = React.lazy(() => import('./TaskDetail'));
+const PRDEditor = React.lazy(() => import('./PRDEditor'));
 import { useTaskMaster } from '../contexts/TaskMasterContext';
 import { useTasksSettings } from '../contexts/TasksSettingsContext';
 import { api } from '../utils/api';
+
+const LazyFallback = () => (
+  <div className="h-full flex items-center justify-center">
+    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 function MainContent({
   selectedProject,
@@ -505,21 +513,26 @@ function MainContent({
         )}
         {activeTab === 'shell' && (
           <div className="h-full w-full overflow-hidden">
-            <StandaloneShell
-              project={selectedProject}
-              session={selectedSession}
-              showHeader={false}
-            />
+            <Suspense fallback={<LazyFallback />}>
+              <StandaloneShell
+                project={selectedProject}
+                session={selectedSession}
+                showHeader={false}
+              />
+            </Suspense>
           </div>
         )}
         {activeTab === 'git' && (
           <div className="h-full overflow-hidden">
-            <GitPanel selectedProject={selectedProject} isMobile={isMobile} onFileOpen={handleFileOpen} />
+            <Suspense fallback={<LazyFallback />}>
+              <GitPanel selectedProject={selectedProject} isMobile={isMobile} onFileOpen={handleFileOpen} />
+            </Suspense>
           </div>
         )}
         {shouldShowTasksTab && (
           <div className={`h-full ${activeTab === 'tasks' ? 'block' : 'hidden'}`}>
             <div className="h-full flex flex-col overflow-hidden">
+              <Suspense fallback={<LazyFallback />}>
               <TaskList
                 tasks={tasks || []}
                 onTaskClick={handleTaskClick}
@@ -548,6 +561,7 @@ function MainContent({
                   }
                 }}
               />
+              </Suspense>
             </div>
           </div>
         )}
@@ -600,14 +614,16 @@ function MainContent({
               className={`flex-shrink-0 border-l border-gray-200 dark:border-gray-700 h-full overflow-hidden ${editorExpanded ? 'flex-1' : ''}`}
               style={editorExpanded ? {} : { width: `${editorWidth}px` }}
             >
-              <CodeEditor
-                file={editingFile}
-                onClose={handleCloseEditor}
-                projectPath={selectedProject?.path}
-                isSidebar={true}
-                isExpanded={editorExpanded}
-                onToggleExpand={handleToggleEditorExpand}
-              />
+              <Suspense fallback={<LazyFallback />}>
+                <CodeEditor
+                  file={editingFile}
+                  onClose={handleCloseEditor}
+                  projectPath={selectedProject?.path}
+                  isSidebar={true}
+                  isExpanded={editorExpanded}
+                  onToggleExpand={handleToggleEditorExpand}
+                />
+              </Suspense>
             </div>
           </>
         )}
@@ -615,26 +631,31 @@ function MainContent({
 
       {/* Code Editor Modal for Mobile */}
       {editingFile && isMobile && (
-        <CodeEditor
-          file={editingFile}
-          onClose={handleCloseEditor}
-          projectPath={selectedProject?.path}
-          isSidebar={false}
-        />
+        <Suspense fallback={<LazyFallback />}>
+          <CodeEditor
+            file={editingFile}
+            onClose={handleCloseEditor}
+            projectPath={selectedProject?.path}
+            isSidebar={false}
+          />
+        </Suspense>
       )}
 
       {/* Task Detail Modal */}
       {shouldShowTasksTab && showTaskDetail && selectedTask && (
-        <TaskDetail
-          task={selectedTask}
-          isOpen={showTaskDetail}
-          onClose={handleTaskDetailClose}
-          onStatusChange={handleTaskStatusChange}
-          onTaskClick={handleTaskClick}
-        />
+        <Suspense fallback={<LazyFallback />}>
+          <TaskDetail
+            task={selectedTask}
+            isOpen={showTaskDetail}
+            onClose={handleTaskDetailClose}
+            onStatusChange={handleTaskStatusChange}
+            onTaskClick={handleTaskClick}
+          />
+        </Suspense>
       )}
       {/* PRD Editor Modal */}
       {showPRDEditor && (
+        <Suspense fallback={<LazyFallback />}>
         <PRDEditor
           project={currentProject}
           projectPath={currentProject?.fullPath || currentProject?.path}
@@ -667,6 +688,7 @@ function MainContent({
             refreshTasks?.();
           }}
         />
+        </Suspense>
       )}
       {/* PRD Notification */}
       {prdNotification && (

@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { Search, Filter, ArrowUpDown, ArrowUp, ArrowDown, List, Grid, ChevronDown, Columns, Plus, Settings, Terminal, FileText, HelpCircle, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import TaskCard from './TaskCard';
 import CreateTaskModal from './CreateTaskModal';
 import { useTaskMaster } from '../contexts/TaskMasterContext';
-import Shell from './Shell';
+const Shell = React.lazy(() => import('./Shell'));
 import { api } from '../utils/api';
 
 const TaskList = ({ 
@@ -435,25 +435,26 @@ const TaskList = ({
                     }
                   }}
                 >
-                  <Shell 
-                    selectedProject={currentProject}
-                    selectedSession={null}
-                    isActive={true}
-                    initialCommand="npx task-master init"
-                    isPlainShell={true}
-                    onProcessComplete={(exitCode) => {
-                      setIsTaskMasterComplete(true);
-                      if (exitCode === 0) {
-                        // Auto-refresh after successful completion
-                        setTimeout(() => {
-                          refreshProjects();
-                          if (currentProject) {
-                            setCurrentProject(currentProject);
-                          }
-                        }, 1000);
-                      }
-                    }}
-                  />
+                  <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+                    <Shell
+                      selectedProject={currentProject}
+                      selectedSession={null}
+                      isActive={true}
+                      initialCommand="npx task-master init"
+                      isPlainShell={true}
+                      onProcessComplete={(exitCode) => {
+                        setIsTaskMasterComplete(true);
+                        if (exitCode === 0) {
+                          setTimeout(() => {
+                            refreshProjects();
+                            if (currentProject) {
+                              setCurrentProject(currentProject);
+                            }
+                          }, 1000);
+                        }
+                      }}
+                    />
+                  </Suspense>
                 </div>
               </div>
               

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { ArrowRight, List, Clock, Flag, CheckCircle, Circle, AlertCircle, Pause, ChevronDown, ChevronUp, Plus, FileText, Settings, X, Terminal, Eye, Play, Zap, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useTaskMaster } from '../contexts/TaskMasterContext';
 import { api } from '../utils/api';
-import Shell from './Shell';
-import TaskDetail from './TaskDetail';
+const Shell = React.lazy(() => import('./Shell'));
+const TaskDetail = React.lazy(() => import('./TaskDetail'));
 
 const NextTaskBanner = ({ onShowAllTasks, onStartTask, className = '' }) => {
   const { nextTask, tasks, currentProject, isLoadingTasks, projectTaskMaster, refreshTasks, refreshProjects } = useTaskMaster();
@@ -292,13 +292,15 @@ const NextTaskBanner = ({ onShowAllTasks, onStartTask, className = '' }) => {
             {/* Terminal Container */}
             <div className="flex-1 p-4">
               <div className="h-full bg-black rounded-lg overflow-hidden">
-                <Shell 
-                  selectedProject={currentProject}
-                  selectedSession={null}
-                  isActive={true}
-                  initialCommand="npx task-master init"
-                  isPlainShell={true}
-                />
+                <Suspense fallback={<div className="flex items-center justify-center h-full"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+                  <Shell
+                    selectedProject={currentProject}
+                    selectedSession={null}
+                    isActive={true}
+                    initialCommand="npx task-master init"
+                    isPlainShell={true}
+                  />
+                </Suspense>
               </div>
             </div>
             
@@ -322,13 +324,15 @@ const NextTaskBanner = ({ onShowAllTasks, onStartTask, className = '' }) => {
 
       {/* Task Detail Modal */}
       {showTaskDetail && nextTask && (
-        <TaskDetail
-          task={nextTask}
-          isOpen={showTaskDetail}
-          onClose={() => setShowTaskDetail(false)}
-          onStatusChange={() => refreshTasks?.()}
-          onTaskClick={null} // Disable dependency navigation in NextTaskBanner for now
-        />
+        <Suspense fallback={<div className="flex items-center justify-center p-8"><div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
+          <TaskDetail
+            task={nextTask}
+            isOpen={showTaskDetail}
+            onClose={() => setShowTaskDetail(false)}
+            onStatusChange={() => refreshTasks?.()}
+            onTaskClick={null}
+          />
+        </Suspense>
       )}
     </>
   );
